@@ -10,6 +10,15 @@ namespace VoiceDictate
     {
         public static bool En;
 
+        /// <summary>Версия программы «1.1» (задаётся в VoiceDictate.csproj).</summary>
+        public static readonly string Version = GetVersion();
+
+        private static string GetVersion()
+        {
+            System.Version v = typeof(L).Assembly.GetName().Version;
+            return v == null ? "" : v.Major + "." + v.Minor;
+        }
+
         public static string Code
         {
             get { return En ? "en" : "ru"; }

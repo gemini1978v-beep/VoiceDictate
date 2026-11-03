@@ -60,7 +60,7 @@ namespace VoiceDictate
 
             tray = new NotifyIcon();
             tray.Icon = iconTrayIdle ?? iconApp ?? SystemIcons.Application;
-            tray.Text = L.T("Голосовой ввод", "Voice Input");
+            tray.Text = L.T("Голосовой ввод ", "Voice Input ") + L.Version;
             tray.ContextMenuStrip = menu;
             tray.MouseClick += (s, e) =>
             {
@@ -152,7 +152,7 @@ namespace VoiceDictate
             }
             string text = recording ? L.T("Идёт запись — ", "Recording — ") + slotDictate.Saved + L.T(", чтобы отправить", " to send")
                 : busy ? L.T("Голосовой ввод — распознаю…", "Voice Input — recognizing…")
-                : L.T("Голосовой ввод — ", "Voice Input — ") + slotDictate.Saved + L.T(" — запись", " — record");
+                : L.T("Голосовой ввод ", "Voice Input ") + L.Version + " — " + slotDictate.Saved + L.T(" — запись", " — record");
             if (text.Length > 63) text = text.Substring(0, 63);
             if (tray.Text != text) tray.Text = text;
         }

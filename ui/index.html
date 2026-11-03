@@ -546,7 +546,7 @@
     <button class="back" id="backBtn" title="Назад (Esc)" data-en-title="Back (Esc)">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3 5 8l5 5"/></svg>
     </button>
-    <div class="tb-title"><b data-en="Settings">Настройки</b><span data-en="Voice Input — Whisper">Голосовой ввод — Whisper</span></div>
+    <div class="tb-title"><b data-en="Settings">Настройки</b><span id="tbSub">Голосовой ввод — Whisper</span></div>
     <button class="lang-btn" id="langBtn" title="Язык интерфейса: English" data-en-title="Interface language: Русский">RU</button>
     <button class="files-btn" id="filesBtn" title="Распознать аудио- или видеофайл" data-en-title="Transcribe an audio or video file">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2.5H7a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7.5z"/><path d="M14 2.5v5h5"/><path d="M8.5 15v-1.5M11 17v-5.5M13.5 16v-3.5M16 15v-1.5"/></svg>
@@ -1183,6 +1183,7 @@
     dl.disabled = S.modelExists || !S.canDownload;
     $('testBtn').disabled = !S.canTest || (cloud ? !S.orHasKey : !S.modelExists);
 
+    $('tbSub').textContent = T('Голосовой ввод ', 'Voice Input ') + (S.version ? S.version + ' ' : '') + '— ' + (cloud ? 'OpenRouter' : 'Whisper');
     $('engine').value = cloud ? 'openrouter' : 'local';
     $('engine').disabled = !S.canModel;
     $('orKey').placeholder = S.orHasKey ? S.orKeyMask + T(' — сохранён', ' — saved') : 'sk-or-v1-…';
@@ -1276,7 +1277,7 @@
         recSeconds: 0, status: 'Готов. F3 — начать запись', statusKind: 'idle',
         models: [{ t: 'small, 190 МБ — рекомендую', ok: true, mb: 190 }, { t: 'large-v3-turbo, 550 МБ — точнее', ok: false, mb: 550 },
                  { t: 'medium, 515 МБ', ok: false, mb: 515 }, { t: 'base, 60 МБ — быстрая, но хуже', ok: false, mb: 60 }],
-        model: 0, modelExists: true, mics: ['По умолчанию (как в Windows)', 'Микрофон (Realtek Audio)', 'Headset (USB Audio)'], mic: 0, micSource: 'direct', lang: 'ru', speechLang: 'ru',
+        model: 0, modelExists: true, mics: ['По умолчанию (как в Windows)', 'Микрофон (Realtek Audio)', 'Headset (USB Audio)'], mic: 0, micSource: 'direct', lang: 'ru', version: '1.1', speechLang: 'ru',
         engine: 'local', orHasKey: false, orKeyMask: '', orModel: 0, orModelName: 'Whisper Large V3 Turbo',
         orModels: ['Whisper Large V3 Turbo — $0,012/ч', 'Whisper Large V3 — $0,027/ч', 'MAI-Transcribe 2 — $0,10/ч'],
         orBalance: '', orBalanceNote: '', orBalanceError: false,

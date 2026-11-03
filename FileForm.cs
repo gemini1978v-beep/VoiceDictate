@@ -49,7 +49,7 @@ namespace VoiceDictate
         public FileForm(MainForm main)
         {
             this.main = main;
-            Text = L.T("Распознать файл — Голосовой ввод", "Transcribe file — Voice Input");
+            Text = L.T("Распознать файл — Голосовой ввод ", "Transcribe file — Voice Input ") + L.Version;
             FormBorderStyle = FormBorderStyle.None;
             ClientSize = new Size(LogicalToDeviceUnits(WebWidth), LogicalToDeviceUnits(WebHeight));
             BackColor = WebUi.BackColor(main.IsDarkTheme);
@@ -110,7 +110,7 @@ namespace VoiceDictate
         /// <summary>Сменился язык окна: заголовок и страница.</summary>
         public void ApplyLang()
         {
-            Text = L.T("Распознать файл — Голосовой ввод", "Transcribe file — Voice Input");
+            Text = L.T("Распознать файл — Голосовой ввод ", "Transcribe file — Voice Input ") + L.Version;
             PushState();
         }
 

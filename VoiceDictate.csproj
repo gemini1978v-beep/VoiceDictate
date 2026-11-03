@@ -9,6 +9,10 @@
     <AssemblyName>VoiceDictate</AssemblyName>
     <RootNamespace>VoiceDictate</RootNamespace>
     <Product>Голосовой ввод</Product>
+    <!-- версия программы: в свойствах exe, в окне, в трее и в журнале -->
+    <Version>1.1.0</Version>
+    <InformationalVersion>1.1</InformationalVersion>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <ApplicationIcon>icons\app.ico</ApplicationIcon>
   </PropertyGroup>
 

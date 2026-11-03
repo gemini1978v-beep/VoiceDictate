@@ -319,6 +319,7 @@ namespace VoiceDictate
                 .Raw("mics", Js.Arr(mics))
                 .S("micSource", settings.MicSource)
                 .S("lang", L.Code)
+                .S("version", L.Version)
                 .S("speechLang", settings.Language)
                 .N("mic", cmbMic.SelectedIndex)
                 .B("gpu", chkGpu.Checked)

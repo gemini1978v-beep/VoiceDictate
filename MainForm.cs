@@ -142,7 +142,8 @@ namespace VoiceDictate
                 fgTimer.Start();
                 RegisterOrLog(slotDictate, L.T("записи", "for recording"));
                 UpdateStatus();
-                Log(slotDictate.Saved + L.T(" — начать запись, ещё раз ", " — start recording, press ") + slotDictate.Saved +
+                Log(L.T("Голосовой ввод ", "Voice Input ") + L.Version + ". " +
+                    slotDictate.Saved + L.T(" — начать запись, ещё раз ", " — start recording, press ") + slotDictate.Saved +
                     L.T(" — распознать (Whisper) и отправить в активное окно.", " again — recognize and send to the active window."));
                 CheckSetup();
                 LoadOpenRouterModels();
@@ -195,7 +196,7 @@ namespace VoiceDictate
 
         private void BuildUi()
         {
-            Text = L.T("Голосовой ввод (Whisper)", "Voice Input (Whisper)");
+            Text = L.T("Голосовой ввод ", "Voice Input ") + L.Version + " (Whisper)";
             Font = new Font("Segoe UI", 9.5f);
             StartPosition = FormStartPosition.CenterScreen;
             ClientSize = new Size(660, 740);
