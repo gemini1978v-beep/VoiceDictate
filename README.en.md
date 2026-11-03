@@ -273,3 +273,8 @@ put the files from its `Release` folder into `dist\whisper-cuda`, and copy `*.dl
 - `Lang.cs` — interface language; strings are translated in place with `L.T("русский", "English")`,
   pages use `data-en` attributes.
 - `settings.ini` — default settings. Do not commit your own OpenRouter key.
+
+## License
+
+[MIT](LICENSE) — free to use, modify and distribute as long as the copyright notice is kept.
+whisper.cpp in the `whisper\` folder is MIT-licensed too (`whisper\LICENSE-whisper.cpp.txt`).

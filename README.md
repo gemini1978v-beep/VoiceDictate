@@ -265,3 +265,8 @@ https://go.microsoft.com/fwlink/p/?LinkId=2124703 .
 - `FileForm.cs`, `FileTranscriber.cs`, `ui\files.html` — окно «Распознать файл».
 - `ui\index.html` — интерфейс главного окна; открытый просто в браузере, работает в демо-режиме.
 - `settings.ini` — настройки по умолчанию. Свой ключ OpenRouter в репозиторий не коммитьте.
+
+## Лицензия
+
+[MIT](LICENSE) — можно свободно использовать, менять и распространять, сохраняя уведомление об авторстве.
+whisper.cpp в папке `whisper\` — тоже под лицензией MIT (`whisper\LICENSE-whisper.cpp.txt`).
