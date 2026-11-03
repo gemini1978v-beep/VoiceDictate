@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gemini1978v-beep.github.io/VoiceDictate/sitemap.xml
