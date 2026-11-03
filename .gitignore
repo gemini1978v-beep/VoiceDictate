@@ -1,0 +1,12 @@
+# сборка
+bin/
+obj/
+dist/
+*.user
+.vs/
+
+# скачивается программой
+models/
+whisper-cuda/
+ffmpeg/
+*.bin

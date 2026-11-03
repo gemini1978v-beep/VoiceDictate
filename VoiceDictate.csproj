@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>VoiceDictate</AssemblyName>
+    <RootNamespace>VoiceDictate</RootNamespace>
+    <Product>Голосовой ввод</Product>
+    <ApplicationIcon>icons\app.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- WebView2 (движок Edge) — окно рисуется HTML/CSS из ui\index.html -->
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="ui\index.html" LogicalName="VoiceDictate.ui.index.html" />
+    <EmbeddedResource Include="ui\files.html" LogicalName="VoiceDictate.ui.files.html" />
+    <EmbeddedResource Include="ui\mic.html" LogicalName="VoiceDictate.ui.mic.html" />
+    <EmbeddedResource Include="icons\app.ico" LogicalName="VoiceDictate.icons.app.ico" />
+    <EmbeddedResource Include="icons\tray-rec.ico" LogicalName="VoiceDictate.icons.tray-rec.ico" />
+    <EmbeddedResource Include="icons\tray-busy.ico" LogicalName="VoiceDictate.icons.tray-busy.ico" />
+  </ItemGroup>
+
+</Project>

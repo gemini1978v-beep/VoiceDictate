@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Голосовой ввод — микрофон</title>
+<!--
+  Запись через обычный браузер. Программа отдаёт эту страницу по адресу http://127.0.0.1:47811/
+  (BrowserMic.cs). Микрофон открывает браузер, звук (16 кГц, моно, 16 бит) уходит в программу.
+  Вкладку нужно держать открытой; запись включается клавишей программы (F3).
+-->
+<style>
+  :root {
+    --blue: #2f7bf5; --green: #22b35e; --red: #e5484d; --amber: #f29a12;
+    --text: #1d1e22; --muted: #8b9099; --bg: #f3f6fb; --card: #ffffff; --line: #e7eaf0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --blue: #3d8bff; --text: #eef0f4; --muted: #8d939e; --bg: #121418; --card: #1b1e24; --line: #2a2e36; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px;
+    font: 15px/1.5 "Segoe UI", system-ui, sans-serif; color: var(--text); background: var(--bg);
+  }
+  .card {
+    width: 100%; max-width: 440px; padding: 28px 24px; text-align: center;
+    background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+  }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  .sub { margin: 0 0 22px; color: var(--muted); font-size: 13px; }
+  .dot {
+    width: 92px; height: 92px; margin: 0 auto 18px; border-radius: 50%;
+    display: grid; place-items: center; color: #fff; background: var(--muted); transition: background .2s;
+  }
+  .dot svg { width: 40px; height: 40px; }
+  .ready .dot { background: var(--blue); }
+  .rec .dot { background: var(--green); box-shadow: 0 0 0 calc(var(--lvl, 0) * 22px) rgba(34,179,94,.25); }
+  .err .dot { background: var(--red); }
+  #state { font-weight: 600; margin: 0 0 6px; }
+  #hint { color: var(--muted); font-size: 13px; margin: 0 0 18px; min-height: 20px; }
+  button {
+    font: inherit; font-weight: 600; color: #fff; background: var(--blue); border: 0; border-radius: 12px;
+    padding: 11px 22px; cursor: pointer;
+  }
+  button:hover { filter: brightness(1.08); }
+  button[hidden] { display: none; }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <h1>Голосовой ввод</h1>
+  <p class="sub">Микрофон через браузер</p>
+  <div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></div>
+  <p id="state">Микрофон не подключён</p>
+  <p id="hint">Нажмите кнопку и разрешите доступ к микрофону.</p>
+  <button id="connect">Подключить микрофон</button>
+</div>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var id = Math.random().toString(36).slice(2) + Date.now().toString(36);   // эта вкладка
+  var RATE = 16000, CHUNK = 1600;
+  var WORKLET = "class P extends AudioWorkletProcessor{process(i){var c=i[0]&&i[0][0];" +
+    "if(c)this.port.postMessage(c.slice(0));return true}}registerProcessor('vd-pcm',P);";
+  var ctx = null, stream = null, node = null, gen = 0, alive = false;
+  var out = new Int16Array(CHUNK), outLen = 0;
+  var ratio = 1, pos = 0, acc = 0, accN = 0, peak = 0;
+
+  function show(kind, state, hint) {
+    $('card').className = 'card ' + (kind || '');
+    $('state').textContent = state;
+    $('hint').textContent = hint || '';
+    document.title = (kind === 'rec' ? '● Запись — ' : '') + 'Голосовой ввод — микрофон';
+  }
+  function showReady() {
+    show('ready', 'Микрофон подключён', 'Оставьте вкладку открытой. Запись включается клавишей программы (F3).');
+  }
+
+  // ------------------------------------------------------------ связь с программой
+  // сообщения идут строго по очереди, чтобы куски звука не перепутались
+  var chain = Promise.resolve();
+  function post(m) {
+    chain = chain.then(function () {
+      return fetch('/msg?id=' + id, { method: 'POST', body: m, headers: { 'Content-Type': 'text/plain' } })
+        .then(function (r) { if (r.status === 409) bye(); })
+        .catch(function () {});
+    });
+  }
+  function bye() {
+    alive = false;
+    stopRec();
+    show('err', 'Микрофон подключён в другой вкладке', 'Эту вкладку можно закрыть.');
+    $('connect').hidden = false;
+    $('connect').textContent = 'Подключить здесь';
+  }
+  async function pollLoop() {
+    var failed = false;
+    while (alive) {
+      try {
+        var r = await fetch('/poll?id=' + id, { cache: 'no-store' });
+        var d = await r.json();
+        if (failed) { failed = false; showReady(); }
+        if (d.type === 'bye') { bye(); return; }
+        if (d.type === 'mic') { if (d.cmd === 'start') startRec(d.name); else stopRec(true); }
+      } catch (e) {
+        if (!failed) show('err', 'Программа не отвечает', 'Запустите «Голосовой ввод» — страница подключится сама.');
+        failed = true;
+        await new Promise(function (ok) { setTimeout(ok, 2000); });
+      }
+    }
+  }
+
+  // ------------------------------------------------------------ звук
+  function errText(e) {
+    var n = e && e.name;
+    if (n === 'NotAllowedError' || n === 'SecurityError')
+      return 'браузер не дал доступ к микрофону — разрешите его для этой страницы (значок слева от адреса)';
+    if (n === 'NotReadableError' || n === 'AbortError')
+      return 'микрофон занят другой программой или заблокирован (например, антивирусом)';
+    if (n === 'NotFoundError' || n === 'OverconstrainedError') return 'микрофон не найден';
+    return (n ? n + ': ' : '') + (e && e.message ? e.message : String(e));
+  }
+  function flush() {
+    if (!outLen) return;
+    var bytes = new Uint8Array(out.buffer, 0, outLen * 2), bin = '';
+    for (var i = 0; i < bytes.length; i += 0x2000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x2000));
+    post('pcm|' + btoa(bin));
+    document.body.style.setProperty('--lvl', Math.min(1, Math.sqrt(peak) * 1.6).toFixed(2));
+    outLen = 0; peak = 0;
+  }
+  function put(v) {
+    v = Math.max(-1, Math.min(1, v));
+    if (Math.abs(v) > peak) peak = Math.abs(v);
+    out[outLen++] = v < 0 ? v * 32768 : v * 32767;
+    if (outLen === CHUNK) flush();
+  }
+  // браузер пишет на 44,1/48 кГц — усредняем до 16 кГц
+  function onSamples(f) {
+    if (ratio === 1) { for (var i = 0; i < f.length; i++) put(f[i]); return; }
+    for (var j = 0; j < f.length; j++) {
+      acc += f[j]; accN++; pos += 1;
+      if (pos >= ratio) { put(acc / accN); pos -= ratio; acc = 0; accN = 0; }
+    }
+  }
+  var base = { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 };
+  // название из списка Windows обрезано до 31 буквы — ищем микрофон, чьё название с него начинается
+  async function open(name) {
+    var s = await navigator.mediaDevices.getUserMedia({ audio: base });
+    if (!name) return s;
+    var want = name.toLowerCase().trim();
+    var list = await navigator.mediaDevices.enumerateDevices();
+    var dev = list.filter(function (d) {
+      var l = (d.label || '').toLowerCase();
+      return d.kind === 'audioinput' && d.deviceId !== 'default' && d.deviceId !== 'communications' &&
+        l && (l.indexOf(want) === 0 || want.indexOf(l) === 0);
+    })[0];
+    var cur = s.getAudioTracks()[0];
+    if (!dev || (cur && cur.getSettings().deviceId === dev.deviceId)) return s;
+    s.getTracks().forEach(function (t) { t.stop(); });
+    return navigator.mediaDevices.getUserMedia({ audio: Object.assign({ deviceId: { exact: dev.deviceId } }, base) });
+  }
+  function closeStream() {
+    if (node) { node.port.onmessage = null; try { node.disconnect(); } catch (e) {} }
+    if (stream) stream.getTracks().forEach(function (t) { t.stop(); });
+    node = null; stream = null;
+  }
+  async function startRec(name) {
+    var my = ++gen;
+    closeStream();
+    outLen = 0; pos = 0; acc = 0; accN = 0; peak = 0;
+    try {
+      if (ctx.state !== 'running') await ctx.resume();
+      if (ctx.state !== 'running') throw new Error('браузер приостановил звук — щёлкните по вкладке микрофона и повторите');
+      var s = await open(name);
+      if (my !== gen) { s.getTracks().forEach(function (t) { t.stop(); }); return; }
+      stream = s;
+      node = new AudioWorkletNode(ctx, 'vd-pcm', { numberOfOutputs: 0 });
+      node.port.onmessage = function (e) { if (my === gen) onSamples(e.data); };
+      ctx.createMediaStreamSource(stream).connect(node);
+      var track = stream.getAudioTracks()[0];
+      if (track) track.onended = function () { if (my === gen) post('micError|микрофон отключился во время записи'); };
+      show('rec', 'Идёт запись', track && track.label ? track.label : '');
+      post('micStarted|' + (track && track.label ? track.label : 'микрофон по умолчанию') + ', браузер');
+    } catch (e) {
+      if (my === gen) { closeStream(); post('micError|' + errText(e)); showReady(); }
+    }
+  }
+  function stopRec(answer) {
+    gen++;
+    flush();
+    closeStream();
+    document.body.style.setProperty('--lvl', 0);
+    if (answer) { post('micStopped'); showReady(); }
+  }
+
+  // ------------------------------------------------------------ подключение (нужен щелчок — так требует браузер)
+  $('connect').onclick = async function () {
+    try {
+      var s = await navigator.mediaDevices.getUserMedia({ audio: base });   // спросит разрешение один раз
+      s.getTracks().forEach(function (t) { t.stop(); });
+      if (!ctx) {
+        ctx = new AudioContext();
+        ratio = ctx.sampleRate / RATE;
+        var url = URL.createObjectURL(new Blob([WORKLET], { type: 'application/javascript' }));
+        await ctx.audioWorklet.addModule(url);
+        URL.revokeObjectURL(url);
+      }
+      await ctx.resume();
+      this.hidden = true;
+      showReady();
+      post('hello');
+      if (!alive) { alive = true; chain.then(pollLoop); }
+    } catch (e) {
+      show('err', 'Не удалось подключить микрофон', errText(e));
+    }
+  };
+})();
+</script>
+</body>
+</html>

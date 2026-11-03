@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Распознать файл</title>
+<!--
+  Окно «Распознать файл» (VoiceDictate). Цвета — те же переменные, что в index.html.
+  В браузере работает демо-режим: ?stage=run | done | error, ?file=1, ?dark=1.
+-->
+<style>
+  /* цвета и шрифты — те же, что в index.html (светлая и тёмная тема) */
+  :root {
+    --blue: #2f7bf5;
+    --blue-hi: #5fa2ff;
+    --blue-lo: #2466e6;
+    --blue-soft: #eaf2ff;
+    --blue-line: #cfe0ff;
+    --green: #22b35e;
+    --green-hi: #4fdc85;
+    --amber: #f29a12;
+    --amber-hi: #ffc04d;
+    --red: #e5484d;
+    --text: #1d1e22;
+    --text-2: #3a3d44;
+    --muted: #8b9099;
+    --muted-2: #a3a8b0;
+    --line: #e7eaf0;
+    --line-2: #dfe3ea;
+    --bg: #ffffff;
+    --bg-2: #f6f8fb;
+    --card: #ffffff;
+    --btn: #f3f4f7;
+    --btn-hover: #eaecf1;
+    --radius: 14px;
+    --app-bg: linear-gradient(180deg, #ffffff 0%, #fbfcfe 55%, #f3f7fd 100%);
+    --surface: #ffffff;          /* поля ввода, списки, кнопка «назад» */
+    --surface-off: #f6f7f9;      /* выключенные поля */
+    --divider: #f0f2f6;          /* линии между строками в карточках */
+    --track: #d9dce2;            /* выключенный переключатель */
+    --bar-bg: #e8edf5;           /* фон полосок прогресса и громкости */
+    --scroll-thumb: #cfd4dc;
+    --scroll-thumb-hover: #b9bfc9;
+    --log-bg: #f6f8fb;
+    --log-line: #edf0f5;
+    --log-text: #3e434c;
+    --bar-glass: rgba(255,255,255,.88);  /* заголовок и низ настроек */
+    --icon: #7d838d;
+    --dot-idle: #c3c7ce;
+    --focus: #9cc0ff;
+    --notice-bg: #f4f8ff;
+    --notice-line: #dbe7ff;
+    --ok-bg: #effaf3; --ok-line: #cdeedb; --ok-text: #1a8a49;
+    --danger-bg: #fff1f1; --danger-line: #ffd0d0;
+    --halo: 47,123,245;          /* цвет кругов вокруг микрофона (r,g,b) */
+    --halo-a1: .07; --halo-a2: .10;
+    --shadow-card: 0 1px 2px rgba(20,40,80,.03);
+    --shadow-text: 0 4px 14px rgba(30,60,120,.05);
+    --light-off: #c9ccd2;
+    --demo-bg: #dfe7f3;
+    --font: "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", -apple-system, system-ui, sans-serif;
+    --font-display: "Segoe UI Variable Display", "Segoe UI Variable", "Segoe UI", -apple-system, system-ui, sans-serif;
+    color-scheme: light;
+  }
+
+  /* ================================================================ тёмная тема */
+  :root[data-theme="dark"] {
+    --blue: #3d8bff;
+    --blue-hi: #6eabff;
+    --blue-lo: #2a6ae0;
+    --blue-soft: rgba(61,139,255,.14);
+    --blue-line: rgba(61,139,255,.38);
+    --green: #2fc46c;
+    --green-hi: #5ee394;
+    --amber: #f5a524;
+    --amber-hi: #ffc861;
+    --red: #ff6369;
+    --text: #eef0f4;
+    --text-2: #cdd1d9;
+    --muted: #8e95a1;
+    --muted-2: #6c7380;
+    --line: #2a2e37;
+    --line-2: #363b46;
+    --bg: #15171c;
+    --bg-2: #121418;
+    --card: #1c1f25;
+    --btn: #272b33;
+    --btn-hover: #30353f;
+    --app-bg: radial-gradient(120% 70% at 50% 0%, #20242c 0%, #17191e 55%, #121418 100%);
+    --surface: #23262e;
+    --surface-off: #1e2127;
+    --divider: #262a32;
+    --track: #3a3f4a;
+    --bar-bg: #2a2e37;
+    --scroll-thumb: #3a3f4a;
+    --scroll-thumb-hover: #4a505c;
+    --log-bg: #15171c;
+    --log-line: #262a32;
+    --log-text: #b9bec8;
+    --bar-glass: rgba(24,26,31,.9);
+    --icon: #8e95a1;
+    --dot-idle: #555b67;
+    --focus: #4b8fff;
+    --notice-bg: rgba(61,139,255,.10);
+    --notice-line: rgba(61,139,255,.28);
+    --ok-bg: rgba(47,196,108,.12); --ok-line: rgba(47,196,108,.3); --ok-text: #5ee394;
+    --danger-bg: rgba(255,99,105,.12); --danger-line: rgba(255,99,105,.35);
+    --halo: 61,139,255;
+    --halo-a1: .09; --halo-a2: .15;
+    --shadow-card: 0 1px 0 rgba(255,255,255,.02), 0 2px 8px rgba(0,0,0,.25);
+    --shadow-text: 0 6px 18px rgba(0,0,0,.3);
+    --light-off: #4a4f5a;
+    --demo-bg: #0b0c0f;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { font-family: var(--font); color: var(--text); background: var(--bg); font-size: 13px; overflow: hidden; user-select: none; -webkit-font-smoothing: antialiased; }
+  body.demo { background: var(--demo-bg); display: grid; place-items: center; }
+  body.demo .app { width: 420px; height: 620px; border-radius: 12px; box-shadow: 0 20px 60px rgba(30,60,120,.25), 0 0 0 1px rgba(0,0,0,.06); }
+  .app { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--app-bg); display: flex; flex-direction: column; animation: appIn .22s ease-out; }
+  @keyframes appIn { from { opacity: 0; } }
+  .theme-anim, .theme-anim * { transition: background-color .3s, color .3s, border-color .3s !important; }
+  button { font: inherit; color: inherit; }
+  :focus { outline: none; }
+  :focus-visible { outline: 2px solid var(--blue-line); outline-offset: 2px; }
+
+  /* ---------------------------------------------------------------- заголовок */
+  .titlebar { position: relative; flex: none; height: 52px; display: flex; align-items: center; padding: 0 16px; }
+  .lights { display: flex; gap: 8px; position: relative; z-index: 2; }
+  .light { width: 12px; height: 12px; padding: 0; border-radius: 50%; border: 0.5px solid rgba(0,0,0,.12); display: grid; place-items: center; cursor: default; }
+  .light svg { width: 8px; height: 8px; opacity: 0; transition: opacity .12s; }
+  .lights:hover .light svg { opacity: .55; }
+  .light.red { background: #ff5f57; } .light.yellow { background: #febc2e; } .light.green { background: var(--light-off); }
+  .tb-title { position: absolute; left: 0; right: 0; top: 9px; text-align: center; pointer-events: none; }
+  .tb-title b { display: block; font-family: var(--font-display); font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+  .tb-title span { display: block; font-size: 11px; color: var(--muted-2); margin-top: 1px; }
+
+  .content { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 6px 18px 18px; }
+  .view { display: none; flex: 1; min-height: 0; flex-direction: column; animation: viewIn .25s ease-out; }
+  .view.show { display: flex; }
+  @keyframes viewIn { from { opacity: 0; transform: translateY(6px); } }
+
+  /* ---------------------------------------------------------------- элементы */
+  .btn { height: 32px; padding: 0 13px; border-radius: 8px; border: 1px solid var(--line-2); background: var(--btn); color: var(--text-2); font-size: 12.5px; font-weight: 500; white-space: nowrap; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px; transition: background .15s, opacity .15s, transform .1s; }
+  .btn:hover { background: var(--btn-hover); }
+  .btn:active { transform: scale(.98); }
+  .btn:disabled { opacity: .5; cursor: default; transform: none; }
+  .btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 2px 8px rgba(47,123,245,.25); }
+  .btn.primary:hover { background: var(--blue-lo); }
+  .btn.primary:disabled { background: var(--blue); }
+  .btn.big { height: 46px; border-radius: 12px; font-size: 14.5px; font-weight: 600; width: 100%; }
+  .btn.ghost { background: transparent; border-color: transparent; color: var(--blue); }
+  .btn.ghost:hover { background: var(--blue-soft); }
+  .btn svg { width: 16px; height: 16px; flex: none; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-card); }
+  .switch { position: relative; flex: none; width: 36px; height: 21px; display: inline-block; cursor: pointer; }
+  .switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .switch i { position: absolute; inset: 0; border-radius: 21px; background: var(--track); transition: background .2s; }
+  .switch i::after { content: ""; position: absolute; left: 2px; top: 2px; width: 17px; height: 17px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: transform .2s cubic-bezier(.3,.7,.3,1); }
+  .switch input:checked + i { background: var(--blue); }
+  .switch input:checked + i::after { transform: translateX(15px); }
+  .progress { height: 5px; border-radius: 5px; background: var(--bar-bg); overflow: hidden; }
+  .progress i { display: block; height: 100%; width: 0; border-radius: 5px; background: linear-gradient(90deg, var(--blue-hi), var(--blue)); transition: width .25s; }
+  .progress.indet i { width: 35%; animation: indet 1.2s ease-in-out infinite; }
+  @keyframes indet { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
+
+  /* ---------------------------------------------------------------- 1. выбор файла */
+  .drop {
+    flex: 1; min-height: 0;
+    border: 2px dashed var(--line-2); border-radius: 18px;
+    background: var(--card);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    padding: 20px; gap: 6px;
+    transition: border-color .15s, background .15s, transform .15s;
+  }
+  .drop.over, .dragging .drop { border-color: var(--blue); background: var(--blue-soft); transform: scale(1.01); }
+  .drop-ic { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; margin-bottom: 10px; color: #fff;
+    background: linear-gradient(160deg, var(--blue-hi), var(--blue) 55%, var(--blue-lo)); box-shadow: 0 10px 24px rgba(47,123,245,.32), 0 0 0 10px rgba(var(--halo),var(--halo-a2)); }
+  .drop-ic svg { width: 34px; height: 34px; }
+  .drop b { font-size: 16px; font-weight: 600; }
+  .drop .or { font-size: 12px; color: var(--muted-2); margin: 2px 0 6px; }
+  .drop small { margin-top: 12px; font-size: 11px; line-height: 1.6; color: var(--muted-2); letter-spacing: .02em; }
+
+  .info { margin-top: 12px; padding: 4px 14px; }
+  .info .r { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 6px 0; font-size: 12.5px; color: var(--text-2); }
+  .info .r + .r { border-top: 1px solid var(--divider); }
+  .info .r > span { flex: 1; min-width: 0; }
+  .info .r > span small { display: block; font-size: 11px; color: var(--muted-2); margin-top: 1px; }
+  .info .r .val { color: var(--text); font-weight: 600; }
+  .info .btn { height: 28px; padding: 0 10px; font-size: 12px; }
+  .ok-mark { color: var(--ok-text); font-weight: 600; }
+  .ff-prog { margin-top: 6px; }
+
+  /* ---------------------------------------------------------------- 2. файл выбран */
+  .file { display: flex; align-items: center; gap: 12px; padding: 12px; }
+  .file-ic { flex: none; width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; background: var(--blue-soft); color: var(--blue); }
+  .file-ic svg { width: 24px; height: 24px; }
+  .file-txt { flex: 1; min-width: 0; }
+  .file-txt b { display: block; font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file-txt span { display: block; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .x { flex: none; width: 30px; height: 30px; border-radius: 8px; border: 0; background: transparent; color: var(--muted); cursor: pointer; display: grid; place-items: center; }
+  .x:hover { background: var(--btn); color: var(--text); }
+  .x svg { width: 14px; height: 14px; }
+  .opts { margin-top: 10px; padding: 2px 14px; }
+  .opt { display: flex; align-items: center; gap: 12px; padding: 11px 0; }
+  .opt + .opt { border-top: 1px solid var(--divider); }
+  .opt .lbl { flex: 1; font-size: 13px; color: var(--text-2); line-height: 1.35; cursor: pointer; }
+  .opt .lbl small { display: block; font-size: 11.5px; color: var(--muted-2); margin-top: 2px; }
+  .opt .val { font-size: 12.5px; color: var(--muted); }
+  .opt .btn { height: 28px; padding: 0 10px; font-size: 12px; }
+  .notice { margin-top: 10px; padding: 12px 14px; border-radius: 12px; background: var(--notice-bg); border: 1px solid var(--notice-line); }
+  .notice b { display: block; font-size: 13px; font-weight: 600; }
+  .notice p { margin: 3px 0 10px; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
+  .spacer { flex: 1; min-height: 12px; }
+  .hint { text-align: center; font-size: 11.5px; color: var(--muted-2); margin-top: 8px; }
+
+  /* ---------------------------------------------------------------- 3. идёт работа */
+  .work { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .ring-wrap { position: relative; width: 206px; height: 206px; display: grid; place-items: center; }
+  .ring-wrap svg.ring { position: absolute; inset: 0; transform: rotate(-90deg); }
+  .ring .track { fill: none; stroke: var(--bar-bg); stroke-width: 6; }
+  .ring .bar { fill: none; stroke: url(#ringGrad); stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset .4s ease; }
+  .ring-wrap.indet svg.ring { animation: spin 1.4s linear infinite; }
+  @keyframes spin { from { transform: rotate(-90deg); } to { transform: rotate(270deg); } }
+  .halo { position: absolute; left: 50%; top: 50%; width: 150px; height: 150px; margin: -75px 0 0 -75px; border-radius: 50%; background: rgba(var(--halo),var(--halo-a2)); animation: breathe 2.2s ease-in-out infinite; }
+  @keyframes breathe { 50% { transform: scale(1.08); opacity: .6; } }
+  .mic { position: relative; width: 112px; height: 112px; border-radius: 50%; color: #fff; display: grid; place-items: center;
+    background: linear-gradient(160deg, var(--blue-hi) 0%, var(--blue) 50%, var(--blue-lo) 100%);
+    box-shadow: 0 14px 30px rgba(47,123,245,.38), inset 0 1px 0 rgba(255,255,255,.35), inset 0 -6px 14px rgba(0,40,140,.18); }
+  .mic svg { width: 40px; height: 40px; margin-bottom: 16px; }
+  .bars { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; gap: 3px; align-items: flex-end; height: 14px; }
+  .bars i { width: 3px; border-radius: 2px; background: rgba(255,255,255,.85); animation: bar 1s ease-in-out infinite; }
+  .bars i:nth-child(1) { animation-delay: -.2s; } .bars i:nth-child(2) { animation-delay: -.5s; } .bars i:nth-child(3) { animation-delay: -.1s; } .bars i:nth-child(4) { animation-delay: -.7s; } .bars i:nth-child(5) { animation-delay: -.35s; }
+  @keyframes bar { 0%, 100% { height: 3px; } 50% { height: 13px; } }
+  .pct { margin-top: 16px; font-family: var(--font-display); font-size: 34px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .work h2 { margin: 2px 0 0; font-size: 16px; font-weight: 600; }
+  .work .fname { margin-top: 4px; max-width: 100%; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .times { margin-top: 12px; display: flex; gap: 16px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .times b { color: var(--text-2); font-weight: 600; }
+  .work .btn { margin-top: 22px; min-width: 140px; }
+
+  /* ---------------------------------------------------------------- 4. готово */
+  .done-head { display: flex; align-items: center; gap: 12px; }
+  .badge { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: linear-gradient(160deg, var(--green-hi), var(--green)); box-shadow: 0 6px 16px rgba(34,179,94,.3); animation: pop .35s cubic-bezier(.3,1.5,.5,1); }
+  .badge.err { background: linear-gradient(160deg, #ff8a8e, var(--red)); box-shadow: 0 6px 16px rgba(229,72,77,.3); }
+  .badge svg { width: 22px; height: 22px; }
+  @keyframes pop { from { transform: scale(.4); opacity: 0; } }
+  .done-head b { display: block; font-size: 17px; font-weight: 700; font-family: var(--font-display); }
+  .done-head span { display: block; font-size: 11.5px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+  .saved { margin-top: 14px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; transition: border-color .15s; }
+  .saved:hover { border-color: var(--blue-line); }
+  .saved .file-ic { width: 36px; height: 36px; border-radius: 10px; }
+  .saved .file-ic svg { width: 19px; height: 19px; }
+  .saved .file-txt b { font-size: 13px; }
+  .saved .file-txt span { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; direction: rtl; text-align: left; }
+  .saved .open { flex: none; font-size: 12px; color: var(--blue); font-weight: 600; }
+  .preview { margin-top: 10px; flex: 1; min-height: 80px; display: flex; }
+  .preview textarea { flex: 1; resize: none; border: 0; border-radius: var(--radius); padding: 12px 14px; background: transparent; color: var(--text); font: 13px/1.55 var(--font); user-select: text; }
+  .preview textarea::-webkit-scrollbar { width: 10px; }
+  .preview textarea::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 10px; border: 3px solid var(--card); }
+  .actions { margin-top: 10px; display: flex; gap: 8px; }
+  .actions .btn { flex: 1; }
+  .srt-line { margin-top: 8px; font-size: 11.5px; color: var(--muted); text-align: center; }
+  .srt-line a { color: var(--blue); cursor: pointer; text-decoration: none; font-weight: 600; }
+  .again { margin-top: 6px; align-self: center; }
+  .err-text { margin-top: 14px; padding: 12px 14px; font-size: 13px; line-height: 1.5; color: var(--text-2); }
+  .err-details { margin-top: 8px; padding: 10px 12px; border-radius: 10px; background: var(--log-bg); border: 1px solid var(--log-line); font: 11px/1.5 Consolas, "Cascadia Mono", monospace; color: var(--log-text); white-space: pre-wrap; word-break: break-word; max-height: 140px; overflow: auto; user-select: text; }
+
+  /* ---------------------------------------------------------------- перетаскивание и подтверждение */
+  .dropover { position: absolute; inset: 8px; z-index: 50; border: 2px dashed var(--blue); border-radius: 14px; background: var(--bg); background: color-mix(in srgb, var(--bg) 85%, var(--blue)); display: grid; place-items: center; text-align: center; color: var(--blue); font-size: 15px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .15s; }
+  .dropover.show { opacity: 1; }
+  .confirm { position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 60; padding: 12px 14px; border-radius: 14px; background: var(--card); border: 1px solid var(--line-2); box-shadow: 0 12px 32px rgba(0,0,0,.18); display: none; }
+  .confirm.show { display: block; animation: viewIn .2s ease-out; }
+  .confirm b { display: block; font-size: 13px; }
+  .confirm p { margin: 3px 0 10px; font-size: 12px; color: var(--muted); }
+  .confirm .row { display: flex; gap: 8px; justify-content: flex-end; }
+  .btn.danger { background: var(--red); border-color: var(--red); color: #fff; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color: var(--blue-hi)"/><stop offset="1" style="stop-color: var(--blue)"/></linearGradient>
+    <symbol id="i-wave" viewBox="0 0 24 24"><path d="M3 12h1.5M6.5 8v8M10 5v14M13.5 9v6M17 7v10M20.5 11v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-film" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M7.5 4.5v15M16.5 4.5v15M3 9h4.5M3 15h4.5M16.5 9H21M16.5 15H21"/></g></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2.5H7a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7.5z"/><path d="M14 2.5v5h5M8.5 13h7M8.5 16.5h5"/></g></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></g></symbol>
+  </defs>
+</svg>
+
+<div class="app" id="app">
+  <header class="titlebar" data-drag>
+    <div class="lights">
+      <button class="light red" id="closeBtn" title="Закрыть"><svg viewBox="0 0 8 8"><path d="M1.5 1.5l5 5M6.5 1.5l-5 5" stroke="#4d0000" stroke-width="1.3"/></svg></button>
+      <button class="light yellow" data-cmd="minimize" title="Свернуть"><svg viewBox="0 0 8 8"><path d="M1.2 4h5.6" stroke="#5a3a00" stroke-width="1.3"/></svg></button>
+      <button class="light green" disabled></button>
+    </div>
+    <div class="tb-title"><b>Распознать файл</b><span>Аудио и видео → текст</span></div>
+  </header>
+
+  <div class="content" id="content">
+
+    <!-- ============================================ 1. выбор файла -->
+    <section class="view" id="vPick" data-drag>
+      <div class="drop" id="drop">
+        <div class="drop-ic"><svg><use href="#i-wave"/></svg></div>
+        <b>Перетащите аудио или видео сюда</b>
+        <div class="or">или</div>
+        <button class="btn primary" id="pickBtn">Выбрать файл</button>
+        <small>MP3 · WAV · M4A · FLAC · OGG · OPUS · WMA · AAC<br>MP4 · MKV · AVI · MOV · WEBM и другие</small>
+      </div>
+      <div class="card info">
+        <div class="r"><span>Модель: <span class="val" id="modelName1">—</span><small>меняется в настройках главного окна</small></span><button class="btn" data-cmd="settings">Изменить</button></div>
+        <div class="r" id="ffRow">
+          <span id="ffText">ffmpeg</span>
+          <button class="btn" id="ffBtn1">Скачать</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================ 2. файл выбран -->
+    <section class="view" id="vReady">
+      <div class="card file">
+        <div class="file-ic" id="fileIc"><svg><use href="#i-wave"/></svg></div>
+        <div class="file-txt"><b id="fileName">file.mp3</b><span id="fileMeta">MP3 · 12 МБ</span></div>
+        <button class="x" data-cmd="clearFile" title="Убрать файл"><svg viewBox="0 0 14 14"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+      </div>
+      <div class="card opts">
+        <div class="opt">
+          <label class="switch"><input type="checkbox" id="srt"><i></i></label>
+          <label class="lbl" for="srt">Ещё и субтитры .srt<small>С таймкодами — удобно для видео</small></label>
+        </div>
+        <div class="opt">
+          <span class="lbl">Модель<small id="langLine">язык: ru</small></span>
+          <span class="val" id="modelName2">small</span>
+          <button class="btn" data-cmd="settings">Изменить</button>
+        </div>
+      </div>
+      <div class="notice" id="ffNotice">
+        <b>Нужен ffmpeg</b>
+        <p>Для этого формата программе нужен бесплатный конвертер ffmpeg (<span id="ffSize">~100</span> МБ, скачивается один раз). Он понимает любое аудио и видео.</p>
+        <button class="btn primary" id="ffBtn2">Скачать ffmpeg</button>
+        <div class="progress ff-prog" id="ffProg"><i></i></div>
+      </div>
+      <div class="notice" id="modelNotice"><b>Модель Whisper не скачана</b><p>Скачайте её в настройках главного окна, это нужно один раз.</p><button class="btn primary" data-cmd="settings">Открыть настройки</button></div>
+      <div class="spacer"></div>
+      <button class="btn primary big" id="startBtn"><svg><use href="#i-mic"/></svg>Распознать</button>
+      <div class="hint">Текст сохранится в .txt рядом с исходным файлом</div>
+    </section>
+
+    <!-- ============================================ 3. идёт работа -->
+    <section class="view" id="vWork" data-drag>
+      <div class="work">
+        <div class="ring-wrap" id="ringWrap">
+          <svg class="ring" viewBox="0 0 206 206"><circle class="track" cx="103" cy="103" r="96"/><circle class="bar" id="ringBar" cx="103" cy="103" r="96"/></svg>
+          <div class="halo"></div>
+          <div class="mic"><svg><use href="#i-mic"/></svg><div class="bars"><i></i><i></i><i></i><i></i><i></i></div></div>
+        </div>
+        <div class="pct" id="pct">0%</div>
+        <h2 id="workTitle">Идёт распознавание…</h2>
+        <div class="fname" id="workFile"></div>
+        <div class="times"><span>Прошло <b id="tElapsed">0:00</b></span><span id="tLeftWrap">Осталось ≈ <b id="tLeft">—</b></span></div>
+        <button class="btn" data-cmd="cancel">Отменить</button>
+      </div>
+    </section>
+
+    <!-- ============================================ 4. готово -->
+    <section class="view" id="vDone">
+      <div class="done-head">
+        <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+        <div><b>Готово</b><span id="doneMeta"></span></div>
+      </div>
+      <div class="card saved" id="savedCard" title="Открыть файл">
+        <div class="file-ic"><svg><use href="#i-doc"/></svg></div>
+        <div class="file-txt"><b id="txtName">file.txt</b><span id="txtDir"></span></div>
+        <span class="open">Открыть</span>
+      </div>
+      <div class="card preview"><textarea id="resultText" readonly></textarea></div>
+      <div class="actions">
+        <button class="btn" data-cmd="folder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>В папке</button>
+        <button class="btn" id="copyBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><span>Копировать</span></button>
+      </div>
+      <div class="srt-line" id="srtLine">Субтитры: <a id="srtLink"></a></div>
+      <button class="btn ghost again" data-cmd="again">Распознать другой файл</button>
+    </section>
+
+    <!-- ============================================ 5. ошибка -->
+    <section class="view" id="vError">
+      <div class="done-head">
+        <div class="badge err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 7v6.5M12 17.2v.3"/></svg></div>
+        <div><b>Не получилось</b><span id="errFile"></span></div>
+      </div>
+      <div class="card err-text" id="errText"></div>
+      <div class="err-details" id="errDetails"></div>
+      <div class="spacer"></div>
+      <div class="actions">
+        <button class="btn" data-cmd="clearFile">Другой файл</button>
+        <button class="btn primary" id="retryBtn">Попробовать снова</button>
+      </div>
+    </section>
+
+    <div class="dropover" id="dropover"><div>Отпустите файл</div></div>
+    <div class="confirm" id="confirm">
+      <b>Распознавание ещё идёт</b>
+      <p>Остановить его и закрыть окно?</p>
+      <div class="row"><button class="btn" id="keepBtn">Продолжить</button><button class="btn danger" id="stopCloseBtn">Остановить и закрыть</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var app = $('app');
+  var host = window.chrome && window.chrome.webview ? window.chrome.webview : null;
+  var S = null, t0 = 0, curView = '';
+  var CIRC = 2 * Math.PI * 96;
+  $('ringBar').style.strokeDasharray = CIRC;
+
+  function send(cmd, arg) {
+    var m = arg === undefined ? cmd : cmd + '|' + arg;
+    if (host) host.postMessage(m); else Demo.cmd(cmd, arg);
+  }
+  function onMessage(d) { if (d && d.type === 'state') { S = d; render(); } }
+  if (host) host.addEventListener('message', function (e) { onMessage(e.data); });
+
+  // ------------------------------------------------------------ кнопки
+  document.querySelectorAll('[data-cmd]').forEach(function (b) { b.addEventListener('click', function () { send(b.getAttribute('data-cmd')); }); });
+  $('pickBtn').onclick = function () { send('pick'); };
+  $('ffBtn1').onclick = $('ffBtn2').onclick = function () { send('ffmpeg'); };
+  $('startBtn').onclick = function () { send('start'); };
+  $('retryBtn').onclick = function () { send('start'); };
+  $('srt').onchange = function () { send('srt', this.checked ? '1' : '0'); };
+  $('savedCard').onclick = function () { send('openTxt'); };
+  $('srtLink').onclick = function () { send('openSrt'); };
+  $('copyBtn').onclick = function () {
+    send('copy');
+    var s = this.querySelector('span'); s.textContent = 'Скопировано ✓';
+    setTimeout(function () { s.textContent = 'Копировать'; }, 1400);
+  };
+  $('closeBtn').onclick = function () {
+    if (S && (S.stage === 'prep' || S.stage === 'run')) $('confirm').classList.add('show');
+    else send('close');
+  };
+  $('keepBtn').onclick = function () { $('confirm').classList.remove('show'); };
+  $('stopCloseBtn').onclick = function () { send('close'); };
+
+  // перетаскивание окна за пустое место
+  document.addEventListener('mousedown', function (e) {
+    if (e.button !== 0) return;
+    var t = e.target;
+    if (t.closest('button, input, label, textarea, a, .card, .drop, .confirm')) return;
+    if (t.closest('[data-drag]')) { e.preventDefault(); send('drag'); }
+  });
+
+  // ------------------------------------------------------------ перетаскивание файла
+  var depth = 0;
+  function hasFiles(e) { return e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') >= 0; }
+  function busy() { return S && (S.stage === 'prep' || S.stage === 'run'); }
+  function dragUi(on) {
+    $('drop').classList.toggle('over', on && curView === 'vPick');
+    $('dropover').classList.toggle('show', on && curView !== 'vPick');
+  }
+  document.addEventListener('dragenter', function (e) { if (!hasFiles(e)) return; e.preventDefault(); if (busy()) return; depth++; dragUi(true); });
+  document.addEventListener('dragleave', function (e) { if (!hasFiles(e)) return; if (--depth <= 0) { depth = 0; dragUi(false); } });
+  document.addEventListener('dragover', function (e) { if (!hasFiles(e)) return; e.preventDefault(); e.dataTransfer.dropEffect = busy() ? 'none' : 'copy'; });
+  document.addEventListener('drop', function (e) {
+    e.preventDefault(); depth = 0; dragUi(false);
+    if (busy()) return;
+    var files = e.dataTransfer && e.dataTransfer.files;
+    if (!files || !files.length) return;
+    if (host && host.postMessageWithAdditionalObjects) host.postMessageWithAdditionalObjects('drop', files);
+    else Demo.drop(files[0]);
+  });
+
+  // ------------------------------------------------------------ отрисовка
+  function mmss(s) { s = Math.max(0, Math.round(s || 0)); var h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ':' + ('0' + m).slice(-2) : m) + ':' + ('0' + x).slice(-2); }
+  function mb(v) { return (v < 10 ? v.toFixed(1) : Math.round(v)).toString().replace('.', ',') + ' МБ'; }
+  function show(id) {
+    if (curView === id) return;
+    ['vPick', 'vReady', 'vWork', 'vDone', 'vError'].forEach(function (v) { $(v).classList.toggle('show', v === id); });
+    curView = id;
+  }
+  var themeT = 0;
+  function applyTheme(t) {
+    var r = document.documentElement;
+    if ((r.getAttribute('data-theme') || 'light') === t) return;
+    document.body.classList.add('theme-anim'); clearTimeout(themeT);
+    themeT = setTimeout(function () { document.body.classList.remove('theme-anim'); }, 350);
+    r.setAttribute('data-theme', t);
+  }
+
+  function render() {
+    if (!S) return;
+    applyTheme(S.theme === 'dark' ? 'dark' : 'light');
+    var st = S.stage, f = S.file;
+    if (st === 'prep' || st === 'run') show('vWork');
+    else if (st === 'done' && S.result) show('vDone');
+    else if (st === 'error') show('vError');
+    else if (f) show('vReady');
+    else show('vPick');
+    if (st !== 'prep' && st !== 'run') $('confirm').classList.remove('show');
+
+    // модель и ffmpeg
+    $('modelName1').textContent = S.model || '—';
+    $('modelName2').textContent = S.model || '—';
+    $('langLine').textContent = 'язык: ' + (S.lang || 'ru');
+    $('ffSize').textContent = '~' + S.ffSize;
+    var ffBtn1 = $('ffBtn1');
+    if (S.ffmpeg) {
+      $('ffText').innerHTML = 'ffmpeg: <span class="ok-mark">установлен ✓</span><small>читает любое аудио и видео</small>';
+      ffBtn1.style.display = 'none';
+    } else {
+      $('ffText').innerHTML = 'ffmpeg не установлен<small>нужен для M4A, AAC, OPUS, WMA и видео</small>';
+      ffBtn1.style.display = '';
+      ffBtn1.disabled = S.ffDownloading;
+      ffBtn1.textContent = S.ffDownloading ? (S.ffFrac >= 0 ? Math.round(S.ffFrac * 100) + '%' : 'Скачиваю…') : 'Скачать ~' + S.ffSize + ' МБ';
+    }
+
+    // файл выбран
+    if (f) {
+      $('fileName').textContent = f.name;
+      $('fileName').title = f.name;
+      $('fileMeta').textContent = f.ext + ' · ' + mb(f.mb) + (f.video ? ' · видео' : '');
+      $('fileIc').innerHTML = '<svg><use href="#' + (f.video ? 'i-film' : 'i-wave') + '"/></svg>';
+      $('ffNotice').style.display = f.needFf ? '' : 'none';
+      $('ffBtn2').disabled = S.ffDownloading;
+      $('ffBtn2').textContent = S.ffDownloading ? 'Скачиваю…' : 'Скачать ffmpeg';
+      var fp = $('ffProg');
+      fp.style.display = S.ffDownloading ? '' : 'none';
+      fp.classList.toggle('indet', S.ffFrac < 0);
+      fp.querySelector('i').style.width = S.ffFrac >= 0 ? Math.round(S.ffFrac * 100) + '%' : '';
+      $('modelNotice').style.display = !S.modelOk ? '' : 'none';
+      $('startBtn').disabled = f.needFf || !S.modelOk;
+      $('workFile').textContent = f.name;
+      $('errFile').textContent = f.name;
+    }
+    $('srt').checked = S.srt;
+
+    // работа
+    if (st === 'prep' || st === 'run') {
+      t0 = Date.now() - S.elapsed * 1000;
+      var p = S.progress;
+      var indet = p < 0 || (st === 'run' && p === 0);
+      $('ringWrap').classList.toggle('indet', indet);
+      var shown = st === 'prep' ? 0 : Math.max(0, p);
+      $('ringBar').style.strokeDashoffset = indet ? CIRC * 0.75 : CIRC * (1 - shown);
+      $('pct').textContent = st === 'prep' ? (p >= 0 ? Math.round(p * 100) + '%' : '…') : Math.round(shown * 100) + '%';
+      $('workTitle').textContent = st === 'prep' ? 'Готовлю звук…' : 'Идёт распознавание…';
+      tickTimes();
+    }
+
+    // готово
+    if (S.result) {
+      var r = S.result, parts = ['за ' + mmss(r.seconds)];
+      if (r.audioSeconds > 0) parts.push(mmss(r.audioSeconds) + ' записи');
+      parts.push(r.words + ' ' + plural(r.words, 'слово', 'слова', 'слов'));
+      $('doneMeta').textContent = parts.join(' · ') + ' · ' + r.device;
+      $('txtName').textContent = r.txtName;
+      $('txtDir').textContent = r.txtDir;
+      if ($('resultText').value !== r.text) { $('resultText').value = r.text; $('resultText').scrollTop = 0; }
+      $('srtLine').style.display = r.srtName ? '' : 'none';
+      $('srtLink').textContent = r.srtName;
+    }
+
+    // ошибка
+    $('errText').textContent = S.error || '';
+    $('errDetails').textContent = S.details || '';
+    $('errDetails').style.display = S.details ? '' : 'none';
+    $('retryBtn').style.display = f ? '' : 'none';
+  }
+  function plural(n, a, b, c) { var m10 = n % 10, m100 = n % 100; return m10 === 1 && m100 !== 11 ? a : m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20) ? b : c; }
+
+  function tickTimes() {
+    if (!S || (S.stage !== 'prep' && S.stage !== 'run')) return;
+    var el = (Date.now() - t0) / 1000;
+    $('tElapsed').textContent = mmss(el);
+    var p = S.progress;
+    if (S.stage === 'run' && p > 0.04 && p < 1) { $('tLeft').textContent = mmss(el * (1 - p) / p); $('tLeftWrap').style.visibility = ''; }
+    else $('tLeftWrap').style.visibility = 'hidden';
+  }
+  setInterval(tickTimes, 500);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') $('confirm').classList.remove('show'); });
+
+  // ------------------------------------------------------------ демо-режим в браузере
+  var Demo = {
+    st: null, iv: 0,
+    init: function () {
+      document.body.classList.add('demo');
+      var q = new URLSearchParams(location.search);
+      this.st = { type: 'state', theme: q.get('dark') ? 'dark' : 'light', stage: 'idle', progress: -1, elapsed: 0, srt: false,
+        model: 'small, 190 МБ', modelOk: true, lang: 'ru', ffmpeg: !q.get('noff'), ffDownloading: false, ffFrac: -1, ffMb: 0, ffSize: 100,
+        error: null, details: null, file: null, result: null };
+      if (q.get('file') || q.get('stage')) this.st.file = { name: 'Лекция по истории — часть 2.mp4', ext: 'MP4', mb: 148.3, video: true, needFf: !!q.get('noff') };
+      var sg = q.get('stage');
+      if (sg === 'run') { this.st.stage = 'run'; this.st.progress = 0.42; this.st.elapsed = 51; }
+      if (sg === 'done') this.finish();
+      if (sg === 'error') { this.st.stage = 'error'; this.st.error = 'ffmpeg не смог прочитать файл: Invalid data found when processing input'; this.st.details = 'whisper_init_from_file_with_params_no_state: loading model\nfailed to read audio data'; }
+      this.push();
+    },
+    finish: function () {
+      var s = this.st; s.stage = 'done';
+      s.result = { text: 'Добрый день. Сегодня мы продолжим разговор о том, как менялась жизнь в городах в конце девятнадцатого века. В прошлый раз мы остановились на развитии железных дорог.\n\nТеперь посмотрим, как это повлияло на торговлю и на то, где люди селились. Первое, что бросается в глаза, — быстрый рост окраин.',
+        txtName: 'Лекция по истории — часть 2.txt', txtDir: 'D:\\Видео\\Лекции', srtName: s.srt ? 'Лекция по истории — часть 2.srt' : '', seconds: 83, audioSeconds: 1265, device: 'видеокарта NVIDIA GeForce RTX 5070 Ti', words: 2140 };
+    },
+    push: function () { onMessage(JSON.parse(JSON.stringify(this.st))); },
+    drop: function (file) { this.st.file = { name: file.name, ext: (file.name.split('.').pop() || '').toUpperCase(), mb: file.size / 1048576, video: /^video/.test(file.type), needFf: false }; this.st.stage = 'idle'; this.st.result = null; this.push(); },
+    cmd: function (c, a) {
+      var s = this.st, self = this;
+      switch (c) {
+        case 'pick': s.file = { name: 'Интервью.m4a', ext: 'M4A', mb: 23.6, video: false, needFf: !s.ffmpeg }; s.stage = 'idle'; break;
+        case 'clearFile': s.file = null; s.stage = 'idle'; s.result = null; break;
+        case 'srt': s.srt = a === '1'; break;
+        case 'again': s.stage = 'idle'; s.result = null; break;
+        case 'ffmpeg':
+          s.ffDownloading = true; s.ffFrac = 0;
+          var iv = setInterval(function () { s.ffFrac += 0.05; if (s.ffFrac >= 1) { clearInterval(iv); s.ffDownloading = false; s.ffmpeg = true; if (s.file) s.file.needFf = false; } self.push(); }, 120);
+          break;
+        case 'start':
+          s.stage = 'prep'; s.progress = -1; s.elapsed = 0; s.error = null; var t = 0;
+          clearInterval(this.iv);
+          this.iv = setInterval(function () {
+            t++;
+            if (t < 8) { s.progress = t / 8; } else { s.stage = 'run'; s.progress = Math.min(1, (t - 8) / 40); }
+            s.elapsed = t * 0.25;
+            if (s.progress >= 1 && s.stage === 'run') { clearInterval(self.iv); self.finish(); }
+            self.push();
+          }, 250);
+          break;
+        case 'cancel': clearInterval(this.iv); s.stage = 'idle'; break;
+        case 'close': clearInterval(this.iv); s.stage = 'idle'; break;
+        default: return;
+      }
+      this.push();
+    }
+  };
+
+  if (host) send('ready'); else Demo.init();
+})();
+</script>
+</body>
+</html>
