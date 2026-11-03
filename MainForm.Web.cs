@@ -177,7 +177,7 @@ namespace VoiceDictate
                 {
                     if (e.ProcessFailedKind == CoreWebView2ProcessFailedKind.BrowserProcessExited)
                     {
-                        BeginInvoke((Action)(() => FallbackToClassic("процесс WebView2 закрылся")));
+                        BeginInvoke((Action)(() => FallbackToClassic(L.T("процесс WebView2 закрылся", "the WebView2 process exited"))));
                         return;
                     }
                     try
@@ -244,9 +244,9 @@ namespace VoiceDictate
             MinimumSize = new Size(600, 620);
             RecreateHandle();
             CenterToScreen();
-            if (wasRegistered) RegisterOrLog(slotDictate, "записи");
-            Log("Новый интерфейс не запустился (" + why + "), показано обычное окно. " +
-                "Нужен Microsoft Edge WebView2 Runtime: " + RuntimeUrl);
+            if (wasRegistered) RegisterOrLog(slotDictate, L.T("записи", "for recording"));
+            Log(L.T("Новый интерфейс не запустился (", "The new interface did not start (") + why + L.T("), показано обычное окно. ", "), showing the classic window. ") +
+                L.T("Нужен Microsoft Edge WebView2 Runtime: ", "Microsoft Edge WebView2 Runtime is required: ") + RuntimeUrl);
         }
 
         // ================================================================ программа → страница
@@ -318,6 +318,8 @@ namespace VoiceDictate
                 .B("modelExists", sel != null && sel.Exists)
                 .Raw("mics", Js.Arr(mics))
                 .S("micSource", settings.MicSource)
+                .S("lang", L.Code)
+                .S("speechLang", settings.Language)
                 .N("mic", cmbMic.SelectedIndex)
                 .B("gpu", chkGpu.Checked)
                 .B("cuda", WhisperEngine.CudaInstalled)
@@ -432,6 +434,17 @@ namespace VoiceDictate
                 case "micSource":
                     if (!recording && !micStarting) SetMicSource(arg);
                     break;
+                case "lang":
+                    SetUiLang(arg);
+                    break;
+                case "speechLang":
+                    if (!busy && !recording && arg.Length > 0 && arg.Length <= 5)
+                    {
+                        settings.Language = arg;
+                        SaveSettings();
+                        Log(L.T("Язык речи: ", "Speech language: ") + arg + ".");
+                    }
+                    break;
                 case "engine":
                     if (!busy && !recording) SetEngine(arg == "openrouter");
                     break;
@@ -532,7 +545,7 @@ namespace VoiceDictate
                     }
                     catch (Exception ex)
                     {
-                        Log("Не удалось открыть папку: " + ex.Message);
+                        Log(L.T("Не удалось открыть папку: ", "Could not open the folder: ") + ex.Message);
                     }
                     break;
                 case "open":
@@ -628,7 +641,7 @@ namespace VoiceDictate
         {
             if (busy || recording || downloading)
             {
-                Log("Сначала дождитесь окончания записи, распознавания или скачивания.");
+                Log(L.T("Сначала дождитесь окончания записи, распознавания или скачивания.", "Wait for recording, recognition or download to finish first."));
                 return;
             }
             var d = new Settings();
@@ -653,7 +666,7 @@ namespace VoiceDictate
             }
             slotDictate.Box.Text = d.HotkeyDictate;
             if (slotDictate.Saved != d.HotkeyDictate || !slotDictate.Registered) SaveHotkey(slotDictate);
-            Log("Настройки сброшены на стандартные.");
+            Log(L.T("Настройки сброшены на стандартные.", "Settings reset to defaults."));
         }
 
         private void OpenUrl(string url)
@@ -668,7 +681,7 @@ namespace VoiceDictate
             }
             catch (Exception ex)
             {
-                Log("Не удалось открыть ссылку: " + ex.Message);
+                Log(L.T("Не удалось открыть ссылку: ", "Could not open the link: ") + ex.Message);
             }
         }
 

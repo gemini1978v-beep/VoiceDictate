@@ -46,16 +46,21 @@ namespace VoiceDictate
             iconTrayBusy = LoadIconResource("tray-busy.ico", small);
 
             var menu = new ContextMenuStrip();
-            trayShow = new ToolStripMenuItem("Открыть окно", null, (s, e) => ShowFromTray());
+            trayShow = new ToolStripMenuItem(L.T("Открыть окно", "Open window"), null, (s, e) => ShowFromTray());
             trayShow.Font = new Font(menu.Font, FontStyle.Bold);
             menu.Items.Add(trayShow);
             menu.Items.Add(new ToolStripSeparator());
-            menu.Items.Add(new ToolStripMenuItem("Выход", null, (s, e) => Close()));
-            menu.Opening += (s, e) => trayShow.Text = IsShownNormally() ? "Спрятать в трей" : "Открыть окно";
+            var trayExit = new ToolStripMenuItem(L.T("Выход", "Exit"), null, (s, e) => Close());
+            menu.Items.Add(trayExit);
+            menu.Opening += (s, e) =>
+            {
+                trayShow.Text = IsShownNormally() ? L.T("Спрятать в трей", "Hide to tray") : L.T("Открыть окно", "Open window");
+                trayExit.Text = L.T("Выход", "Exit");
+            };
 
             tray = new NotifyIcon();
             tray.Icon = iconTrayIdle ?? iconApp ?? SystemIcons.Application;
-            tray.Text = "Голосовой ввод";
+            tray.Text = L.T("Голосовой ввод", "Voice Input");
             tray.ContextMenuStrip = menu;
             tray.MouseClick += (s, e) =>
             {
@@ -116,8 +121,8 @@ namespace VoiceDictate
                 SaveSettings();
                 try
                 {
-                    tray.ShowBalloonTip(4000, "Голосовой ввод работает в трее",
-                        slotDictate.Saved + " — запись и отправка, как обычно. Щёлкните по значку, чтобы открыть окно.",
+                    tray.ShowBalloonTip(4000, L.T("Голосовой ввод работает в трее", "Voice Input is running in the tray"),
+                        slotDictate.Saved + L.T(" — запись и отправка, как обычно. Щёлкните по значку, чтобы открыть окно.", " — record and send as usual. Click the icon to open the window."),
                         ToolTipIcon.None);
                 }
                 catch
@@ -145,9 +150,9 @@ namespace VoiceDictate
                 Icon ic = st == 1 ? iconTrayRec : st == 2 ? iconTrayBusy : iconTrayIdle;
                 if (ic != null) tray.Icon = ic;
             }
-            string text = recording ? "Идёт запись — " + slotDictate.Saved + ", чтобы отправить"
-                : busy ? "Голосовой ввод — распознаю…"
-                : "Голосовой ввод — " + slotDictate.Saved + " — запись";
+            string text = recording ? L.T("Идёт запись — ", "Recording — ") + slotDictate.Saved + L.T(", чтобы отправить", " to send")
+                : busy ? L.T("Голосовой ввод — распознаю…", "Voice Input — recognizing…")
+                : L.T("Голосовой ввод — ", "Voice Input — ") + slotDictate.Saved + L.T(" — запись", " — record");
             if (text.Length > 63) text = text.Substring(0, 63);
             if (tray.Text != text) tray.Text = text;
         }

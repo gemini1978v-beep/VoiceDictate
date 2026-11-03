@@ -48,8 +48,8 @@
 </head>
 <body>
 <div class="card" id="card">
-  <h1>Голосовой ввод</h1>
-  <p class="sub">Микрофон через браузер</p>
+  <h1 id="title">Голосовой ввод</h1>
+  <p class="sub" id="sub">Микрофон через браузер</p>
   <div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></div>
   <p id="state">Микрофон не подключён</p>
   <p id="hint">Нажмите кнопку и разрешите доступ к микрофону.</p>
@@ -59,6 +59,19 @@
 (function () {
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
+  // язык: программа открывает страницу с ?lang=en; запоминаем, чтобы и после перезагрузки вкладки
+  var lang = new URLSearchParams(location.search).get('lang');
+  if (!lang) lang = document.documentElement.getAttribute('data-lang');   // программа ставит язык в разметку
+  try { if (lang) localStorage.setItem('vd-lang', lang); else lang = localStorage.getItem('vd-lang'); } catch (e) {}
+  lang = lang === 'en' ? 'en' : 'ru';
+  function T(ru, en) { return lang === 'en' ? en : ru; }
+  document.documentElement.lang = lang;
+  document.title = T('Голосовой ввод — микрофон', 'Voice Input — microphone');
+  $('title').textContent = T('Голосовой ввод', 'Voice Input');
+  $('sub').textContent = T('Микрофон через браузер', 'Microphone via browser');
+  $('state').textContent = T('Микрофон не подключён', 'Microphone not connected');
+  $('hint').textContent = T('Нажмите кнопку и разрешите доступ к микрофону.', 'Click the button and allow microphone access.');
+  $('connect').textContent = T('Подключить микрофон', 'Connect microphone');
   var id = Math.random().toString(36).slice(2) + Date.now().toString(36);   // эта вкладка
   var RATE = 16000, CHUNK = 1600;
   var WORKLET = "class P extends AudioWorkletProcessor{process(i){var c=i[0]&&i[0][0];" +
@@ -71,10 +84,10 @@
     $('card').className = 'card ' + (kind || '');
     $('state').textContent = state;
     $('hint').textContent = hint || '';
-    document.title = (kind === 'rec' ? '● Запись — ' : '') + 'Голосовой ввод — микрофон';
+    document.title = (kind === 'rec' ? T('● Запись — ', '● Recording — ') : '') + T('Голосовой ввод — микрофон', 'Voice Input — microphone');
   }
   function showReady() {
-    show('ready', 'Микрофон подключён', 'Оставьте вкладку открытой. Запись включается клавишей программы (F3).');
+    show('ready', T('Микрофон подключён', 'Microphone connected'), T('Оставьте вкладку открытой. Запись включается клавишей программы (F3).', 'Keep this tab open. Recording is started with the program hotkey (F3).'));
   }
 
   // ------------------------------------------------------------ связь с программой
@@ -90,9 +103,9 @@
   function bye() {
     alive = false;
     stopRec();
-    show('err', 'Микрофон подключён в другой вкладке', 'Эту вкладку можно закрыть.');
+    show('err', T('Микрофон подключён в другой вкладке', 'The microphone is connected in another tab'), T('Эту вкладку можно закрыть.', 'You can close this tab.'));
     $('connect').hidden = false;
-    $('connect').textContent = 'Подключить здесь';
+    $('connect').textContent = T('Подключить здесь', 'Connect here');
   }
   async function pollLoop() {
     var failed = false;
@@ -104,7 +117,7 @@
         if (d.type === 'bye') { bye(); return; }
         if (d.type === 'mic') { if (d.cmd === 'start') startRec(d.name); else stopRec(true); }
       } catch (e) {
-        if (!failed) show('err', 'Программа не отвечает', 'Запустите «Голосовой ввод» — страница подключится сама.');
+        if (!failed) show('err', T('Программа не отвечает', 'The program is not responding'), T('Запустите «Голосовой ввод» — страница подключится сама.', 'Start Voice Input — the page will reconnect by itself.'));
         failed = true;
         await new Promise(function (ok) { setTimeout(ok, 2000); });
       }
@@ -115,10 +128,10 @@
   function errText(e) {
     var n = e && e.name;
     if (n === 'NotAllowedError' || n === 'SecurityError')
-      return 'браузер не дал доступ к микрофону — разрешите его для этой страницы (значок слева от адреса)';
+      return T('браузер не дал доступ к микрофону — разрешите его для этой страницы (значок слева от адреса)', 'the browser denied microphone access — allow it for this page (icon left of the address)');
     if (n === 'NotReadableError' || n === 'AbortError')
-      return 'микрофон занят другой программой или заблокирован (например, антивирусом)';
-    if (n === 'NotFoundError' || n === 'OverconstrainedError') return 'микрофон не найден';
+      return T('микрофон занят другой программой или заблокирован (например, антивирусом)', 'the microphone is busy or blocked (e.g. by an antivirus)');
+    if (n === 'NotFoundError' || n === 'OverconstrainedError') return T('микрофон не найден', 'microphone not found');
     return (n ? n + ': ' : '') + (e && e.message ? e.message : String(e));
   }
   function flush() {
@@ -171,7 +184,7 @@
     outLen = 0; pos = 0; acc = 0; accN = 0; peak = 0;
     try {
       if (ctx.state !== 'running') await ctx.resume();
-      if (ctx.state !== 'running') throw new Error('браузер приостановил звук — щёлкните по вкладке микрофона и повторите');
+      if (ctx.state !== 'running') throw new Error(T('браузер приостановил звук — щёлкните по вкладке микрофона и повторите', 'the browser paused audio — click the microphone tab and try again'));
       var s = await open(name);
       if (my !== gen) { s.getTracks().forEach(function (t) { t.stop(); }); return; }
       stream = s;
@@ -179,9 +192,9 @@
       node.port.onmessage = function (e) { if (my === gen) onSamples(e.data); };
       ctx.createMediaStreamSource(stream).connect(node);
       var track = stream.getAudioTracks()[0];
-      if (track) track.onended = function () { if (my === gen) post('micError|микрофон отключился во время записи'); };
-      show('rec', 'Идёт запись', track && track.label ? track.label : '');
-      post('micStarted|' + (track && track.label ? track.label : 'микрофон по умолчанию') + ', браузер');
+      if (track) track.onended = function () { if (my === gen) post('micError|' + T('микрофон отключился во время записи', 'the microphone was disconnected during recording')); };
+      show('rec', T('Идёт запись', 'Recording'), track && track.label ? track.label : '');
+      post('micStarted|' + (track && track.label ? track.label : T('микрофон по умолчанию', 'default microphone')) + T(', браузер', ', browser'));
     } catch (e) {
       if (my === gen) { closeStream(); post('micError|' + errText(e)); showReady(); }
     }
@@ -212,7 +225,7 @@
       post('hello');
       if (!alive) { alive = true; chain.then(pollLoop); }
     } catch (e) {
-      show('err', 'Не удалось подключить микрофон', errText(e));
+      show('err', T('Не удалось подключить микрофон', 'Could not connect the microphone'), errText(e));
     }
   };
 })();

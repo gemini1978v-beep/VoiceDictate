@@ -29,10 +29,14 @@ namespace VoiceDictate
             ".ts", ".mts", ".m2ts", ".vob", ".ogv",
         };
 
-        public const string DialogFilter =
-            "Аудио и видео|*.mp3;*.wav;*.m4a;*.aac;*.flac;*.ogg;*.oga;*.opus;*.wma;*.amr;*.aiff;*.aif;*.ac3;*.mka;" +
-            "*.mp4;*.m4v;*.mkv;*.avi;*.mov;*.webm;*.wmv;*.flv;*.3gp;*.mpeg;*.mpg;*.ts;*.mts;*.m2ts;*.vob;*.ogv" +
-            "|Все файлы|*.*";
+        public static string DialogFilter
+        {
+            get { return L.T("Аудио и видео", "Audio and video") + "|" + MediaMask + "|" + L.T("Все файлы", "All files") + "|*.*"; }
+        }
+
+        private const string MediaMask =
+            "*.mp3;*.wav;*.m4a;*.aac;*.flac;*.ogg;*.oga;*.opus;*.wma;*.amr;*.aiff;*.aif;*.ac3;*.mka;" +
+            "*.mp4;*.m4v;*.mkv;*.avi;*.mov;*.webm;*.wmv;*.flv;*.3gp;*.mpeg;*.mpg;*.ts;*.mts;*.m2ts;*.vob;*.ogv";
 
         /// <summary>Откуда качать ffmpeg (берётся только ffmpeg.exe из папки bin архива).</summary>
         public static readonly string[] FfmpegUrls =
@@ -119,7 +123,7 @@ namespace VoiceDictate
             public string SrtPath;
             public double Seconds;        // сколько шла работа
             public double AudioSeconds;   // длина записи (если известна)
-            public string Device = "процессор";
+            public string Device = L.T("процессор", "CPU");
             public string Error;          // null — всё хорошо
             public string Details;
         }
@@ -142,21 +146,21 @@ namespace VoiceDictate
 
             if (!File.Exists(input))
             {
-                res.Error = "файл не найден: " + input;
+                res.Error = L.T("файл не найден: ", "file not found: ") + input;
                 return res;
             }
             string cli = WhisperEngine.CliPath;
             if (!File.Exists(cli))
             {
-                res.Error = "не найден " + cli + ". Папка whisper должна лежать рядом с программой.";
+                res.Error = L.T("не найден ", "not found: ") + cli + L.T(". Папка whisper должна лежать рядом с программой.", ". The whisper folder must be next to the program.");
                 return res;
             }
             string model = WhisperEngine.AsciiPath(modelPath);
             if (!File.Exists(modelPath) || model == null)
             {
                 res.Error = model == null
-                    ? "в пути к программе есть русские буквы — переложите её, например, в C:\\VoiceDictate"
-                    : "модель не скачана: " + Path.GetFileName(modelPath);
+                    ? L.T("в пути к программе есть русские буквы — переложите её, например, в C:\\VoiceDictate", "the program path contains non-Latin letters — move it, for example, to C:\\VoiceDictate")
+                    : L.T("модель не скачана: ", "model is not downloaded: ") + Path.GetFileName(modelPath);
                 return res;
             }
 
@@ -186,7 +190,7 @@ namespace VoiceDictate
             }
             else
             {
-                res.Error = "для этого формата нужен ffmpeg — нажмите «Скачать ffmpeg»";
+                res.Error = L.T("для этого формата нужен ffmpeg — нажмите «Скачать ffmpeg»", "this format needs ffmpeg — click “Download ffmpeg”");
                 return res;
             }
             ct.ThrowIfCancellationRequested();
@@ -241,13 +245,13 @@ namespace VoiceDictate
             string logText;
             lock (log) logText = log.ToString();
             Match dev = Regex.Match(logText, @"Device \d+:\s*([^,\r\n]+)");
-            if (dev.Success) res.Device = "видеокарта " + dev.Groups[1].Value.Trim();
+            if (dev.Success) res.Device = L.T("видеокарта ", "GPU ") + dev.Groups[1].Value.Trim();
             if (exitCode != 0)
             {
                 bool badAudio = logText.IndexOf("failed to read", StringComparison.OrdinalIgnoreCase) >= 0 ||
                                 logText.IndexOf("failed to open", StringComparison.OrdinalIgnoreCase) >= 0;
                 res.Error = badAudio
-                    ? "whisper не смог прочитать файл. Скачайте ffmpeg (кнопка в окне) — он понимает любые форматы"
+                    ? L.T("whisper не смог прочитать файл. Скачайте ffmpeg (кнопка в окне) — он понимает любые форматы", "whisper could not read the file. Download ffmpeg (button in the window) — it understands any format")
                     : WhisperEngine.DescribeExitCode(exitCode);
                 res.Details = WhisperEngine.Tail(logText, 6);
                 return res;
@@ -257,7 +261,7 @@ namespace VoiceDictate
             res.Text = FormatText(raw);
             if (res.Text.Length == 0)
             {
-                res.Error = "Whisper не нашёл речи в этом файле";
+                res.Error = L.T("Whisper не нашёл речи в этом файле", "Whisper found no speech in this file");
                 return res;
             }
 
@@ -292,7 +296,7 @@ namespace VoiceDictate
                     res.SrtPath = null;
                 }
             }
-            if (lastErr != null) res.Error = "не удалось сохранить текст: " + lastErr.Message;
+            if (lastErr != null) res.Error = L.T("не удалось сохранить текст: ", "could not save the text: ") + lastErr.Message;
             return res;
         }
 
@@ -366,8 +370,8 @@ namespace VoiceDictate
             if (code == 0 && File.Exists(wav) && new FileInfo(wav).Length > 1000) return null;
             if (text.IndexOf("does not contain any stream", StringComparison.OrdinalIgnoreCase) >= 0 ||
                 text.IndexOf("matches no streams", StringComparison.OrdinalIgnoreCase) >= 0)
-                return "в этом файле нет звуковой дорожки";
-            return "ffmpeg не смог прочитать файл: " + WhisperEngine.Tail(text, 2);
+                return L.T("в этом файле нет звуковой дорожки", "this file has no audio track");
+            return L.T("ffmpeg не смог прочитать файл: ", "ffmpeg could not read the file: ") + WhisperEngine.Tail(text, 2);
         }
 
         private static double ToSeconds(Match m)
@@ -438,7 +442,7 @@ namespace VoiceDictate
                 {
                     try
                     {
-                        log("Скачиваю ffmpeg: " + url);
+                        log(L.T("Скачиваю ffmpeg: ", "Downloading ffmpeg: ") + url);
                         using (var resp = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct))
                         {
                             resp.EnsureSuccessStatusCode();
@@ -464,14 +468,14 @@ namespace VoiceDictate
                             }
                         }
 
-                        log("Распаковываю ffmpeg…");
+                        log(L.T("Распаковываю ffmpeg…", "Unpacking ffmpeg…"));
                         await Task.Run(() =>
                         {
                             using (ZipArchive za = ZipFile.OpenRead(zip))
                             {
                                 ZipArchiveEntry entry = za.Entries.FirstOrDefault(e =>
                                     e.FullName.Replace('\\', '/').EndsWith("bin/ffmpeg.exe", StringComparison.OrdinalIgnoreCase));
-                                if (entry == null) throw new InvalidDataException("в архиве нет bin/ffmpeg.exe");
+                                if (entry == null) throw new InvalidDataException(L.T("в архиве нет bin/ffmpeg.exe", "the archive has no bin/ffmpeg.exe"));
                                 string tmp = exe + ".tmp";
                                 entry.ExtractToFile(tmp, true);
                                 if (File.Exists(exe)) File.Delete(exe);
@@ -489,12 +493,12 @@ namespace VoiceDictate
                     catch (Exception ex)
                     {
                         last = ex;
-                        log("Не получилось: " + ex.Message);
+                        log(L.T("Не получилось: ", "Failed: ") + ex.Message);
                         TryDelete(zip);
                     }
                 }
             }
-            throw new IOException("не удалось скачать ffmpeg: " + (last != null ? last.Message : "нет ответа"));
+            throw new IOException(L.T("не удалось скачать ffmpeg: ", "could not download ffmpeg: ") + (last != null ? last.Message : L.T("нет ответа", "no response")));
         }
 
         private static void TryDelete(string path)

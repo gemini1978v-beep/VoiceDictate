@@ -52,7 +52,7 @@ namespace VoiceDictate
             post(new MainForm.Js().S("type", "mic").S("cmd", "start").S("name", micName ?? "").ToString());
 
             Task done = await Task.WhenAny(startWait.Task, Task.Delay(10000));
-            string error = done == startWait.Task ? startWait.Task.Result : "страница с микрофоном не ответила";
+            string error = done == startWait.Task ? startWait.Task.Result : L.T("страница с микрофоном не ответила", "the microphone page did not respond");
             startWait = null;
             if (error != null)
             {
@@ -93,7 +93,7 @@ namespace VoiceDictate
                 case "micError":
                     if (startWait != null)
                     {
-                        startWait.TrySetResult(arg.Length > 0 ? arg : "неизвестная ошибка");
+                        startWait.TrySetResult(arg.Length > 0 ? arg : L.T("неизвестная ошибка", "unknown error"));
                         break;
                     }
                     if (IsRecording) return arg;

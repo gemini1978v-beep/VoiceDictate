@@ -17,14 +17,21 @@ namespace VoiceDictate
     internal sealed class WhisperModel
     {
         public string File;      // имя файла в папке models
-        public string Title;     // как показать в списке
         public int SizeMb;
+        private readonly string titleRu, titleEn;
 
-        public WhisperModel(string file, string title, int sizeMb)
+        public WhisperModel(string file, string titleRu, string titleEn, int sizeMb)
         {
             File = file;
-            Title = title;
+            this.titleRu = titleRu;
+            this.titleEn = titleEn;
             SizeMb = sizeMb;
+        }
+
+        /// <summary>Как показать в списке (на языке интерфейса).</summary>
+        public string Title
+        {
+            get { return L.En ? titleEn : titleRu; }
         }
 
         public string FullPath
@@ -50,7 +57,7 @@ namespace VoiceDictate
 
         public override string ToString()
         {
-            return Title + (Exists ? "  ✓" : "  (не скачана)");
+            return Title + (Exists ? "  ✓" : L.T("  (не скачана)", "  (not downloaded)"));
         }
     }
 
@@ -63,10 +70,10 @@ namespace VoiceDictate
         /// <summary>Модели, которые можно скачать из программы. Первая — рекомендуемая.</summary>
         public static readonly WhisperModel[] Known =
         {
-            new WhisperModel("ggml-small-q5_1.bin", "small, 190 МБ — рекомендую", 190),
-            new WhisperModel("ggml-large-v3-turbo-q5_0.bin", "large-v3-turbo, 550 МБ — точнее", 550),
-            new WhisperModel("ggml-medium-q5_0.bin", "medium, 515 МБ", 515),
-            new WhisperModel("ggml-base-q5_1.bin", "base, 60 МБ — быстрая, но хуже", 60),
+            new WhisperModel("ggml-small-q5_1.bin", "small, 190 МБ — рекомендую", "small, 190 MB — recommended", 190),
+            new WhisperModel("ggml-large-v3-turbo-q5_0.bin", "large-v3-turbo, 550 МБ — точнее", "large-v3-turbo, 550 MB — more accurate", 550),
+            new WhisperModel("ggml-medium-q5_0.bin", "medium, 515 МБ", "medium, 515 MB", 515),
+            new WhisperModel("ggml-base-q5_1.bin", "base, 60 МБ — быстрая, но хуже", "base, 60 MB — fast but less accurate", 60),
         };
 
         // Фразы, которые Whisper «придумывает» на тишине (научился на субтитрах)
@@ -160,7 +167,7 @@ namespace VoiceDictate
                         // пробуем следующую
                     }
                 }
-                throw new IOException("не нашлось папки для временных файлов с путём латиницей");
+                throw new IOException(L.T("не нашлось папки для временных файлов с путём латиницей", "no temp folder with a Latin-only path was found"));
             }
         }
 
@@ -177,7 +184,7 @@ namespace VoiceDictate
                         string name = Path.GetFileName(f);
                         if (list.Any(m => string.Equals(m.File, name, StringComparison.OrdinalIgnoreCase))) continue;
                         long mb = new FileInfo(f).Length / (1024 * 1024);
-                        list.Add(new WhisperModel(name, name + " (" + mb + " МБ)", (int)mb));
+                        list.Add(new WhisperModel(name, name + " (" + mb + " МБ)", name + " (" + mb + " MB)", (int)mb));
                     }
                 }
             }
@@ -196,7 +203,7 @@ namespace VoiceDictate
             public double Seconds;
             public string Error;      // null — всё хорошо
             public string Details;    // последние строки журнала whisper (при ошибке)
-            public string Device = "процессор";   // на чём шло распознавание
+            public string Device = L.T("процессор", "CPU");   // на чём шло распознавание
             public double? Cost;      // сколько стоило (только OpenRouter), долларов
         }
 
@@ -214,12 +221,12 @@ namespace VoiceDictate
             string cli = CliPath;
             if (!File.Exists(cli))
             {
-                res.Error = "не найден " + cli + ". Папка whisper должна лежать рядом с программой.";
+                res.Error = L.T("не найден ", "not found: ") + cli + L.T(". Папка whisper должна лежать рядом с программой.", ". The whisper folder must be next to the program.");
                 return res;
             }
             if (!File.Exists(modelPath))
             {
-                res.Error = "модель не скачана: " + Path.GetFileName(modelPath);
+                res.Error = L.T("модель не скачана: ", "model is not downloaded: ") + Path.GetFileName(modelPath);
                 return res;
             }
 
@@ -227,8 +234,8 @@ namespace VoiceDictate
             string wav = AsciiPath(wavPath);
             if (model == null || wav == null)
             {
-                res.Error = "в пути к программе есть русские буквы, а whisper такие пути не открывает. " +
-                            "Переложите папку программы, например, в C:\\VoiceDictate";
+                res.Error = L.T("в пути к программе есть русские буквы, а whisper такие пути не открывает. ", "the program path contains non-Latin letters, and whisper cannot open such paths. ") +
+                            L.T("Переложите папку программы, например, в C:\\VoiceDictate", "Move the program folder, for example, to C:\\VoiceDictate");
                 return res;
             }
 
@@ -292,7 +299,7 @@ namespace VoiceDictate
                 }
                 catch (Exception ex)
                 {
-                    res.Error = "не удалось запустить whisper: " + ex.Message;
+                    res.Error = L.T("не удалось запустить whisper: ", "could not start whisper: ") + ex.Message;
                     return res;
                 }
                 try
@@ -316,14 +323,14 @@ namespace VoiceDictate
                     {
                         // уже завершился
                     }
-                    res.Error = "whisper не ответил за 10 минут";
+                    res.Error = L.T("whisper не ответил за 10 минут", "whisper did not respond within 10 minutes");
                     return res;
                 }
                 p.WaitForExit();   // дочитать вывод
 
                 res.Seconds = sw.Elapsed.TotalSeconds;
                 Match dev = Regex.Match(log.ToString(), @"Device \d+:\s*([^,\r\n]+)");
-                if (dev.Success) res.Device = "видеокарта " + dev.Groups[1].Value.Trim();
+                if (dev.Success) res.Device = L.T("видеокарта ", "GPU ") + dev.Groups[1].Value.Trim();
                 int code = p.ExitCode;
                 if (code != 0)
                 {
@@ -354,16 +361,16 @@ namespace VoiceDictate
             switch (u)
             {
                 case 0xC0000135:
-                    return "whisper не запустился: не хватает DLL. Поставьте Microsoft Visual C++ Redistributable x64: " +
+                    return L.T("whisper не запустился: не хватает DLL. Поставьте Microsoft Visual C++ Redistributable x64: ", "whisper did not start: missing DLLs. Install Microsoft Visual C++ Redistributable x64: ") +
                            "https://aka.ms/vs/17/release/vc_redist.x64.exe";
                 case 0xC000001D:
-                    return "whisper не запустился: процессор не поддерживает нужные инструкции";
+                    return L.T("whisper не запустился: процессор не поддерживает нужные инструкции", "whisper did not start: the CPU lacks required instructions");
                 case 0xC0000005:
-                    return "whisper аварийно завершился (код 0xC0000005). Попробуйте другую модель";
+                    return L.T("whisper аварийно завершился (код 0xC0000005). Попробуйте другую модель", "whisper crashed (code 0xC0000005). Try another model");
                 case 0xC0000017:
-                    return "whisper не хватило памяти. Возьмите модель поменьше";
+                    return L.T("whisper не хватило памяти. Возьмите модель поменьше", "whisper ran out of memory. Pick a smaller model");
                 default:
-                    return "whisper завершился с ошибкой, код " + code;
+                    return L.T("whisper завершился с ошибкой, код ", "whisper exited with an error, code ") + code;
             }
         }
 
@@ -410,7 +417,7 @@ namespace VoiceDictate
                 {
                     try
                     {
-                        log("Скачиваю " + url);
+                        log(L.T("Скачиваю ", "Downloading ") + url);
                         using (var resp = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct))
                         {
                             resp.EnsureSuccessStatusCode();
@@ -437,7 +444,7 @@ namespace VoiceDictate
                         }
 
                         if (!LooksLikeGgml(part))
-                            throw new InvalidDataException("скачался не файл модели (возможно, страница-заглушка)");
+                            throw new InvalidDataException(L.T("скачался не файл модели (возможно, страница-заглушка)", "the download is not a model file (maybe a placeholder page)"));
                         if (File.Exists(model.FullPath)) File.Delete(model.FullPath);
                         File.Move(part, model.FullPath);
                         return;
@@ -450,12 +457,12 @@ namespace VoiceDictate
                     catch (Exception ex)
                     {
                         last = ex;
-                        log("Не получилось: " + ex.Message);
+                        log(L.T("Не получилось: ", "Failed: ") + ex.Message);
                         TryDelete(part);
                     }
                 }
             }
-            throw new IOException("не удалось скачать модель: " + (last != null ? last.Message : "нет ответа"));
+            throw new IOException(L.T("не удалось скачать модель: ", "could not download the model: ") + (last != null ? last.Message : L.T("нет ответа", "no response")));
         }
 
         /// <summary>Скачать и распаковать whisper.cpp с CUDA в папку whisper-cuda.</summary>
@@ -465,7 +472,7 @@ namespace VoiceDictate
             string tmpDir = CudaDir + ".tmp";
             try
             {
-                log("Скачиваю " + CudaUrl);
+                log(L.T("Скачиваю ", "Downloading ") + CudaUrl);
                 using (var http = new HttpClient())
                 {
                     http.Timeout = Timeout.InfiniteTimeSpan;
@@ -495,7 +502,7 @@ namespace VoiceDictate
                     }
                 }
 
-                log("Распаковываю…");
+                log(L.T("Распаковываю…", "Unpacking…"));
                 await Task.Run(() =>
                 {
                     if (Directory.Exists(tmpDir)) Directory.Delete(tmpDir, true);
@@ -519,7 +526,7 @@ namespace VoiceDictate
                     }
                     if (!File.Exists(Path.Combine(tmpDir, "whisper-cli.exe")) ||
                         !File.Exists(Path.Combine(tmpDir, "ggml-cuda.dll")))
-                        throw new InvalidDataException("в архиве нет whisper-cli.exe или ggml-cuda.dll");
+                        throw new InvalidDataException(L.T("в архиве нет whisper-cli.exe или ggml-cuda.dll", "the archive has no whisper-cli.exe or ggml-cuda.dll"));
                     if (Directory.Exists(CudaDir)) Directory.Delete(CudaDir, true);
                     Directory.Move(tmpDir, CudaDir);
                 });

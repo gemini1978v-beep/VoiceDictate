@@ -41,7 +41,7 @@ namespace VoiceDictate
 
             public string Title
             {
-                get { return Name + " — " + (PerHour < 0 ? "цена в токенах" : FormatUsd(PerHour) + "/ч"); }
+                get { return Name + " — " + (PerHour < 0 ? L.T("цена в токенах", "priced per token") : FormatUsd(PerHour) + L.T("/ч", "/h")); }
             }
         }
 
@@ -149,14 +149,14 @@ namespace VoiceDictate
                             JsonElement d = doc.RootElement.GetProperty("data");
                             double left = Num(d, "total_credits") - Num(d, "total_usage");
                             b.Text = FormatUsd(left);
-                            b.Note = "Баланс аккаунта. Пополнено " + FormatUsd(Num(d, "total_credits")) +
-                                     ", потрачено " + FormatUsd(Num(d, "total_usage")) + ".";
+                            b.Note = L.T("Баланс аккаунта. Пополнено ", "Account balance. Topped up ") + FormatUsd(Num(d, "total_credits")) +
+                                     L.T(", потрачено ", ", spent ") + FormatUsd(Num(d, "total_usage")) + ".";
                             return b;
                         }
                     }
                     if (r.StatusCode == HttpStatusCode.Unauthorized)
                     {
-                        b.Error = "ключ не подходит — проверьте, что он скопирован целиком";
+                        b.Error = L.T("ключ не подходит — проверьте, что он скопирован целиком", "the key is invalid — make sure it was copied completely");
                         return b;
                     }
                 }
@@ -185,13 +185,13 @@ namespace VoiceDictate
                         if (left >= 0)
                         {
                             b.Text = FormatUsd(left);
-                            b.Note = "Остаток лимита этого ключа. Им потрачено " + FormatUsd(usage) + ".";
+                            b.Note = L.T("Остаток лимита этого ключа. Им потрачено ", "Remaining limit of this key. Spent with it: ") + FormatUsd(usage) + ".";
                         }
                         else
                         {
-                            b.Text = "потрачено " + FormatUsd(usage);
-                            b.Note = "Баланс аккаунта OpenRouter показывает только ключу управления (Management key) " +
-                                     "или ключу с лимитом трат. Сейчас виден расход этого ключа.";
+                            b.Text = L.T("потрачено ", "spent ") + FormatUsd(usage);
+                            b.Note = L.T("Баланс аккаунта OpenRouter показывает только ключу управления (Management key) ", "OpenRouter shows the account balance only to a Management key ") +
+                                     L.T("или ключу с лимитом трат. Сейчас виден расход этого ключа.", "or a key with a spending limit. Showing what this key has spent.");
                         }
                     }
                 }
@@ -276,24 +276,24 @@ namespace VoiceDictate
             }
             switch ((int)code)
             {
-                case 401: return "ключ OpenRouter не подходит (" + (msg ?? "401") + ")";
-                case 402: return "на балансе OpenRouter закончились деньги — пополните на openrouter.ai";
-                case 429: return "OpenRouter просит подождать: слишком много запросов";
+                case 401: return L.T("ключ OpenRouter не подходит (", "the OpenRouter key is invalid (") + (msg ?? "401") + ")";
+                case 402: return L.T("на балансе OpenRouter закончились деньги — пополните на openrouter.ai", "your OpenRouter balance is empty — top it up at openrouter.ai");
+                case 429: return L.T("OpenRouter просит подождать: слишком много запросов", "OpenRouter asks to wait: too many requests");
             }
             return "OpenRouter: " + (int)code + (msg != null ? " — " + msg : "");
         }
 
         private static string Friendly(Exception ex)
         {
-            if (ex is TaskCanceledException) return "OpenRouter не ответил за 2 минуты";
-            if (ex is HttpRequestException) return "нет связи с OpenRouter (" + ex.Message + ")";
+            if (ex is TaskCanceledException) return L.T("OpenRouter не ответил за 2 минуты", "OpenRouter did not respond within 2 minutes");
+            if (ex is HttpRequestException) return L.T("нет связи с OpenRouter (", "cannot reach OpenRouter (") + ex.Message + ")";
             return ex.Message;
         }
 
         /// <summary>Доллары: мелкие суммы с тремя-четырьмя знаками, остальные — с двумя.</summary>
         public static string FormatUsd(double v)
         {
-            var ru = CultureInfo.GetCultureInfo("ru-RU");
+            var ru = CultureInfo.GetCultureInfo(L.En ? "en-US" : "ru-RU");
             double a = Math.Abs(v);
             string s = a == 0 ? "0" : a < 0.001 ? v.ToString("0.00000", ru) : a < 0.1 ? v.ToString("0.0##", ru) : v.ToString("0.00", ru);
             return "$" + s;

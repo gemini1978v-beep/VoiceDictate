@@ -25,8 +25,8 @@ namespace VoiceDictate
             {
                 if (string.IsNullOrEmpty(settings.OpenRouterKey))
                 {
-                    Log("Вставьте ключ OpenRouter в настройках (раздел «Распознавание») или выберите «На компьютере».");
-                    SetStatus("Нет ключа OpenRouter", ColorRed);
+                    Log(L.T("Вставьте ключ OpenRouter в настройках (раздел «Распознавание») или выберите «На компьютере».", "Paste your OpenRouter key in Settings (the “Recognition” section) or choose “On this computer”."));
+                    SetStatus(L.T("Нет ключа OpenRouter", "No OpenRouter key"), ColorRed);
                     return false;
                 }
                 return true;
@@ -34,14 +34,14 @@ namespace VoiceDictate
             var model = SelectedModel();
             if (model == null || !model.Exists)
             {
-                Log("Сначала скачайте модель: кнопка «Скачать» рядом со списком моделей.");
-                SetStatus("Модель не скачана — нажмите «Скачать»", ColorRed);
+                Log(L.T("Сначала скачайте модель: кнопка «Скачать» рядом со списком моделей.", "Download a model first: the “Download” button next to the model list."));
+                SetStatus(L.T("Модель не скачана — нажмите «Скачать»", "Model not downloaded — click “Download”"), ColorRed);
                 return false;
             }
             if (!File.Exists(WhisperEngine.CliPath))
             {
-                Log("Не найден " + WhisperEngine.CliPath + ". Положите папку whisper рядом с программой.");
-                SetStatus("Не найден whisper", ColorRed);
+                Log(L.T("Не найден ", "Not found: ") + WhisperEngine.CliPath + L.T(". Положите папку whisper рядом с программой.", ". Put the whisper folder next to the program."));
+                SetStatus(L.T("Не найден whisper", "whisper not found"), ColorRed);
                 return false;
             }
             return true;
@@ -50,9 +50,9 @@ namespace VoiceDictate
         /// <summary>«моделью ggml-small…» или «в OpenRouter (Whisper Large V3 Turbo)» — для журнала.</summary>
         private string EngineDescription()
         {
-            if (settings.Cloud) return "в OpenRouter (" + OpenRouterModelName() + ")";
+            if (settings.Cloud) return L.T("в OpenRouter (", "in OpenRouter (") + OpenRouterModelName() + ")";
             var m = SelectedModel();
-            return "моделью " + (m != null ? m.File : "?");
+            return L.T("моделью ", "with model ") + (m != null ? m.File : "?");
         }
 
         private async Task<WhisperEngine.Result> TranscribeAsync(string wav)
@@ -60,7 +60,7 @@ namespace VoiceDictate
             if (!settings.Cloud)
             {
                 var model = SelectedModel();
-                return await WhisperEngine.TranscribeAsync(wav, model.FullPath, settings.Language, settings.Prompt);
+                return await WhisperEngine.TranscribeAsync(wav, model.FullPath, settings.Language, settings.EffectivePrompt);
             }
             WhisperEngine.Result res = await OpenRouter.TranscribeAsync(
                 wav, settings.OpenRouterKey, settings.OpenRouterModel, OpenRouterModelName(), settings.Language);
@@ -91,7 +91,7 @@ namespace VoiceDictate
             }
             catch (Exception ex)
             {
-                if (settings.Cloud) Log("Не удалось загрузить список моделей OpenRouter (" + ex.Message + "), показаны цены из программы.");
+                if (settings.Cloud) Log(L.T("Не удалось загрузить список моделей OpenRouter (", "Could not load the OpenRouter model list (") + ex.Message + L.T("), показаны цены из программы.", "), showing built-in prices."));
             }
             if (OpenRouterModelIndex() < 0 && orModelsLoaded && orModels.Count > 0)
             {
@@ -101,7 +101,7 @@ namespace VoiceDictate
                 settings.OpenRouterModel = orModels[def >= 0 ? def : 0].Id;
                 SaveSettings();
                 if (settings.Cloud)
-                    Log("Модели «" + old + "» нет среди моделей распознавания речи OpenRouter — выбрана " +
+                    Log(L.T("Модели «", "Model “") + old + L.T("» нет среди моделей распознавания речи OpenRouter — выбрана ", "” is not an OpenRouter speech-to-text model — switched to ") +
                         OpenRouterModelName() + ".");
             }
             else if (OpenRouterModelIndex() < 0)
@@ -123,15 +123,15 @@ namespace VoiceDictate
                 WebPushState();
                 return;
             }
-            if (orBalance.Length == 0) orBalance = "проверяю…";
+            if (orBalance.Length == 0) orBalance = L.T("проверяю…", "checking…");
             WebPushState();
 
             OpenRouter.Balance b = await OpenRouter.GetBalanceAsync(settings.OpenRouterKey);
             if (IsDisposed || version != orBalanceVersion) return;
             orBalanceError = b.Error != null;
-            orBalance = b.Error != null ? "не удалось узнать" : b.Text;
+            orBalance = b.Error != null ? L.T("не удалось узнать", "unavailable") : b.Text;
             orBalanceNote = b.Error ?? b.Note ?? "";
-            if (log) Log(b.Error != null ? "OpenRouter: " + b.Error : "OpenRouter, баланс: " + b.Text + ". " + b.Note);
+            if (log) Log(b.Error != null ? "OpenRouter: " + b.Error : L.T("OpenRouter, баланс: ", "OpenRouter balance: ") + b.Text + ". " + b.Note);
             WebPushState();
         }
 
@@ -142,14 +142,14 @@ namespace VoiceDictate
             SaveSettings();
             if (cloud)
             {
-                Log("Распознавание: в облаке OpenRouter (" + OpenRouterModelName() + "). Платно — с баланса OpenRouter." +
-                    (string.IsNullOrEmpty(settings.OpenRouterKey) ? " Вставьте ключ API в поле ниже." : ""));
+                Log(L.T("Распознавание: в облаке OpenRouter (", "Recognition: in the OpenRouter cloud (") + OpenRouterModelName() + L.T("). Платно — с баланса OpenRouter.", "). Paid — from your OpenRouter balance.") +
+                    (string.IsNullOrEmpty(settings.OpenRouterKey) ? L.T(" Вставьте ключ API в поле ниже.", " Paste your API key in the field below.") : ""));
                 if (!orModelsLoaded) LoadOpenRouterModels();
                 RefreshBalance(false);
             }
             else
             {
-                Log("Распознавание: на компьютере (Whisper, бесплатно).");
+                Log(L.T("Распознавание: на компьютере (Whisper, бесплатно).", "Recognition: on this computer (Whisper, free)."));
             }
             UpdateStatus();
         }
@@ -158,11 +158,11 @@ namespace VoiceDictate
         {
             key = (key ?? "").Trim();
             if (key.Length > 0 && !key.StartsWith("sk-or-", StringComparison.Ordinal))
-                Log("Похоже, это не ключ OpenRouter: он обычно начинается с «sk-or-v1-». Всё равно сохраняю.");
+                Log(L.T("Похоже, это не ключ OpenRouter: он обычно начинается с «sk-or-v1-». Всё равно сохраняю.", "This does not look like an OpenRouter key: it usually starts with “sk-or-v1-”. Saving it anyway."));
             settings.OpenRouterKey = key;
             SaveSettings();
             orBalance = "";
-            Log(key.Length > 0 ? "Ключ OpenRouter сохранён в settings.ini (" + OpenRouter.Mask(key) + ")." : "Ключ OpenRouter удалён.");
+            Log(key.Length > 0 ? L.T("Ключ OpenRouter сохранён в settings.ini (", "OpenRouter key saved to settings.ini (") + OpenRouter.Mask(key) + ")." : L.T("Ключ OpenRouter удалён.", "OpenRouter key removed."));
             RefreshBalance(key.Length > 0);
         }
 
@@ -172,7 +172,23 @@ namespace VoiceDictate
             OpenRouter.Model m = orModels[index];
             settings.OpenRouterModel = m.Id;
             SaveSettings();
-            Log("Модель OpenRouter: " + m.Title + ".");
+            Log(L.T("Модель OpenRouter: ", "OpenRouter model: ") + m.Title + ".");
+        }
+
+        /// <summary>Переключить язык окна (RU / EN) на лету.</summary>
+        private void SetUiLang(string lang)
+        {
+            lang = lang == "en" ? "en" : "ru";
+            if (settings.UiLang == lang) return;
+            settings.UiLang = lang;
+            L.En = lang == "en";
+            SaveSettings();
+            // списки, где названия собираются в программе
+            FillMics();
+            FillModels();
+            if (fileForm != null && !fileForm.IsDisposed) fileForm.ApplyLang();
+            Log(L.T("Язык интерфейса: русский.", "Interface language: English."));
+            UpdateStatus();
         }
 
         /// <summary>Часть состояния для страницы: всё про облако.</summary>

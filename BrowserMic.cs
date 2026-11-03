@@ -62,7 +62,7 @@ namespace VoiceDictate
             {
                 listener = null;
                 throw new InvalidOperationException(ex.SocketErrorCode == SocketError.AddressAlreadyInUse
-                    ? "порт " + Port + " занят — возможно, программа уже запущена"
+                    ? L.T("порт ", "port ") + Port + L.T(" занят — возможно, программа уже запущена", " is busy — the program may already be running")
                     : ex.Message);
             }
             Task.Run(AcceptLoop);
@@ -252,7 +252,7 @@ namespace VoiceDictate
             while (have < n)
             {
                 int r = s.Read(body, have, n - have);
-                if (r <= 0) throw new IOException("соединение закрыто");
+                if (r <= 0) throw new IOException(L.T("соединение закрыто", "connection closed"));
                 have += r;
             }
             return body;

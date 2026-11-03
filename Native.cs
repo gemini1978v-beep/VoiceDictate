@@ -194,7 +194,7 @@ namespace VoiceDictate
             var sb = new StringBuilder(256);
             GetWindowText(hWnd, sb, sb.Capacity);
             string t = sb.ToString();
-            return t.Length == 0 ? "(окно без заголовка)" : t;
+            return t.Length == 0 ? L.T("(окно без заголовка)", "(untitled window)") : t;
         }
     }
 }

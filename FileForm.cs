@@ -49,7 +49,7 @@ namespace VoiceDictate
         public FileForm(MainForm main)
         {
             this.main = main;
-            Text = "Распознать файл — Голосовой ввод";
+            Text = L.T("Распознать файл — Голосовой ввод", "Transcribe file — Voice Input");
             FormBorderStyle = FormBorderStyle.None;
             ClientSize = new Size(LogicalToDeviceUnits(WebWidth), LogicalToDeviceUnits(WebHeight));
             BackColor = WebUi.BackColor(main.IsDarkTheme);
@@ -107,6 +107,13 @@ namespace VoiceDictate
         }
 
         /// <summary>Тему переключили в главном окне.</summary>
+        /// <summary>Сменился язык окна: заголовок и страница.</summary>
+        public void ApplyLang()
+        {
+            Text = L.T("Распознать файл — Голосовой ввод", "Transcribe file — Voice Input");
+            PushState();
+        }
+
         public void ApplyTheme()
         {
             BackColor = WebUi.BackColor(main.IsDarkTheme);
@@ -143,7 +150,7 @@ namespace VoiceDictate
             }
             catch (Exception ex)
             {
-                main.LogExternal("Окно файлов не открылось: " + ex.Message);
+                main.LogExternal(L.T("Окно файлов не открылось: ", "The file window did not open: ") + ex.Message);
                 BeginInvoke((Action)Close);
             }
         }
@@ -267,7 +274,7 @@ namespace VoiceDictate
             if (Running) return;
             using (var dlg = new OpenFileDialog())
             {
-                dlg.Title = "Выберите аудио или видео";
+                dlg.Title = L.T("Выберите аудио или видео", "Choose audio or video");
                 dlg.Filter = FileTranscriber.DialogFilter;
                 dlg.CheckFileExists = true;
                 if (filePath != null) dlg.InitialDirectory = Path.GetDirectoryName(filePath);
@@ -292,12 +299,12 @@ namespace VoiceDictate
             WhisperModel model = main.CurrentModel;
             if (model == null || !model.Exists)
             {
-                Fail("Модель Whisper не скачана — скачайте её в настройках главного окна.", null);
+                Fail(L.T("Модель Whisper не скачана — скачайте её в настройках главного окна.", "The Whisper model is not downloaded — download it in the main window settings."), null);
                 return;
             }
             if (!FileTranscriber.CanRead(filePath))
             {
-                Fail("Для этого формата нужен ffmpeg — нажмите «Скачать ffmpeg».", null);
+                Fail(L.T("Для этого формата нужен ffmpeg — нажмите «Скачать ffmpeg».", "This format needs ffmpeg — click “Download ffmpeg”."), null);
                 return;
             }
 
@@ -309,13 +316,13 @@ namespace VoiceDictate
             error = null;
             clock.Start();
             PushState();
-            main.LogExternal("Файл: распознаю «" + Path.GetFileName(filePath) + "» моделью " + model.File + "…");
+            main.LogExternal(L.T("Файл: распознаю «", "File: transcribing “") + Path.GetFileName(filePath) + L.T("» моделью ", "” with model ") + model.File + "…");
 
             Settings st = main.AppSettings;
             try
             {
                 FileTranscriber.Result res = await FileTranscriber.TranscribeAsync(filePath, model.FullPath,
-                    st.Language, st.Prompt, st.FileSrt,
+                    st.Language, st.EffectivePrompt, st.FileSrt,
                     (stg, frac) => OnUi(() =>
                     {
                         if (!Running) return;
@@ -327,20 +334,20 @@ namespace VoiceDictate
                 if (res.Error != null)
                 {
                     Fail(res.Error, res.Details);
-                    main.LogExternal("Файл: ошибка — " + res.Error);
+                    main.LogExternal(L.T("Файл: ошибка — ", "File: error — ") + res.Error);
                 }
                 else
                 {
                     result = res;
                     stage = "done";
-                    main.LogExternal("Файл: готово за " + res.Seconds.ToString("0") + " с (" + res.Device + ") → " +
+                    main.LogExternal(L.T("Файл: готово за ", "File: done in ") + res.Seconds.ToString("0") + L.T(" с (", " s (") + res.Device + ") → " +
                                      res.TxtPath);
                 }
             }
             catch (OperationCanceledException)
             {
                 stage = "idle";
-                main.LogExternal("Файл: распознавание отменено.");
+                main.LogExternal(L.T("Файл: распознавание отменено.", "File: transcription cancelled."));
             }
             catch (Exception ex)
             {
@@ -386,7 +393,7 @@ namespace VoiceDictate
                     }),
                     m => OnUi(() => main.LogExternal(m)),
                     ffCts.Token);
-                main.LogExternal("ffmpeg установлен: " + FileTranscriber.FfmpegDir);
+                main.LogExternal(L.T("ffmpeg установлен: ", "ffmpeg installed: ") + FileTranscriber.FfmpegDir);
             }
             catch (OperationCanceledException)
             {
@@ -394,9 +401,9 @@ namespace VoiceDictate
             }
             catch (Exception ex)
             {
-                main.LogExternal(ex.Message + ". Можно вручную: скачайте ffmpeg для Windows и положите ffmpeg.exe в " +
+                main.LogExternal(ex.Message + L.T(". Можно вручную: скачайте ffmpeg для Windows и положите ffmpeg.exe в ", ". You can do it manually: download ffmpeg for Windows and put ffmpeg.exe into ") +
                                  FileTranscriber.FfmpegDir);
-                if (!IsDisposed) Fail("Не удалось скачать ffmpeg: " + ex.Message, null);
+                if (!IsDisposed) Fail(L.T("Не удалось скачать ffmpeg: ", "Could not download ffmpeg: ") + ex.Message, null);
             }
             finally
             {
@@ -423,6 +430,7 @@ namespace VoiceDictate
                 .S("model", model != null ? model.Title.Split('—')[0].Trim().TrimEnd(',') : "")
                 .B("modelOk", model != null && model.Exists)
                 .S("lang", main.AppSettings.Language)
+                .S("ui", L.Code)
                 .B("ffmpeg", hasFf)
                 .B("ffDownloading", ffDownloading)
                 .N("ffFrac", ffFrac)
@@ -529,7 +537,7 @@ namespace VoiceDictate
             }
             catch (Exception ex)
             {
-                main.LogExternal("Не удалось открыть файл: " + ex.Message);
+                main.LogExternal(L.T("Не удалось открыть файл: ", "Could not open the file: ") + ex.Message);
             }
         }
 
@@ -541,7 +549,7 @@ namespace VoiceDictate
             }
             catch (Exception ex)
             {
-                main.LogExternal("Не удалось открыть папку: " + ex.Message);
+                main.LogExternal(L.T("Не удалось открыть папку: ", "Could not open the folder: ") + ex.Message);
             }
         }
 

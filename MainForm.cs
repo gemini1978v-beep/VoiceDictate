@@ -118,6 +118,7 @@ namespace VoiceDictate
         public MainForm()
         {
             settings = Settings.Load();
+            L.En = settings.UiLang == "en";
             WhisperEngine.UseGpu = settings.UseGpu;
             slotDictate.Id = ID_DICTATE;
             slotDictate.Saved = settings.HotkeyDictate;
@@ -139,16 +140,16 @@ namespace VoiceDictate
             Shown += (s, e) =>
             {
                 fgTimer.Start();
-                RegisterOrLog(slotDictate, "записи");
+                RegisterOrLog(slotDictate, L.T("записи", "for recording"));
                 UpdateStatus();
-                Log(slotDictate.Saved + " — начать запись, ещё раз " + slotDictate.Saved +
-                    " — распознать (Whisper) и отправить в активное окно.");
+                Log(slotDictate.Saved + L.T(" — начать запись, ещё раз ", " — start recording, press ") + slotDictate.Saved +
+                    L.T(" — распознать (Whisper) и отправить в активное окно.", " again — recognize and send to the active window."));
                 CheckSetup();
                 LoadOpenRouterModels();
                 if (settings.Cloud) RefreshBalance(false);
                 if (settings.MicSource == "browser" && StartBrowserMic())
-                    Log("Запись через браузер: держите открытой вкладку " + BrowserMic.Url +
-                        " (если её нет — откроется сама при первом нажатии " + slotDictate.Saved + ").");
+                    Log(L.T("Запись через браузер: держите открытой вкладку ", "Recording via browser: keep the tab open: ") + BrowserMic.Url +
+                        L.T(" (если её нет — откроется сама при первом нажатии ", " (if it is not open, it opens on the first press of ") + slotDictate.Saved + ").");
             };
             FormClosing += (s, e) =>
             {
@@ -179,22 +180,22 @@ namespace VoiceDictate
         private void CheckSetup()
         {
             if (!File.Exists(WhisperEngine.CliPath))
-                Log("Не найден whisper: " + WhisperEngine.CliPath +
-                    ". Папка whisper из архива должна лежать рядом с VoiceDictate.exe.");
+                Log(L.T("Не найден whisper: ", "whisper not found: ") + WhisperEngine.CliPath +
+                    L.T(". Папка whisper из архива должна лежать рядом с VoiceDictate.exe.", ". The whisper folder from the archive must be next to VoiceDictate.exe."));
             var m = SelectedModel();
             if (!settings.Cloud && m != null && !m.Exists)
-                Log("Модель «" + m.File + "» ещё не скачана. Нажмите «Скачать» (~" + m.SizeMb +
-                    " МБ, один раз), потом «Проверить».");
+                Log(L.T("Модель «", "Model “") + m.File + L.T("» ещё не скачана. Нажмите «Скачать» (~", "” is not downloaded yet. Click “Download” (~") + m.SizeMb +
+                    L.T(" МБ, один раз), потом «Проверить».", " MB, once), then “Test”."));
             if (WhisperEngine.AsciiPath(WhisperEngine.BaseDir) == null)
-                Log("Внимание: в пути к программе есть русские буквы. Если whisper не сможет открыть файлы, " +
-                    "переложите папку программы, например, в C:\\VoiceDictate.");
+                Log(L.T("Внимание: в пути к программе есть русские буквы. Если whisper не сможет открыть файлы, ", "Warning: the program path contains non-Latin letters. If whisper cannot open files, ") +
+                    L.T("переложите папку программы, например, в C:\\VoiceDictate.", "move the program folder, for example, to C:\\VoiceDictate."));
         }
 
         // ================================================================ интерфейс
 
         private void BuildUi()
         {
-            Text = "Голосовой ввод (Whisper)";
+            Text = L.T("Голосовой ввод (Whisper)", "Voice Input (Whisper)");
             Font = new Font("Segoe UI", 9.5f);
             StartPosition = FormStartPosition.CenterScreen;
             ClientSize = new Size(660, 740);
@@ -209,13 +210,13 @@ namespace VoiceDictate
             };
             root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
 
-            root.Controls.Add(MakeHotkeyRow(slotDictate, "Записать / отправить:"));
-            root.Controls.Add(MakeHint("1-е нажатие — запись с микрофона (зелёный), 2-е — распознать и отправить (красный). " +
-                                       "Сменить клавишу: щёлкните в поле, нажмите сочетание и «Сохранить»."));
+            root.Controls.Add(MakeHotkeyRow(slotDictate, L.T("Записать / отправить:", "Record / send:")));
+            root.Controls.Add(MakeHint(L.T("1-е нажатие — запись с микрофона (зелёный), 2-е — распознать и отправить (красный). ", "1st press — record from the microphone (green), 2nd — recognize and send (red). ") +
+                                       L.T("Сменить клавишу: щёлкните в поле, нажмите сочетание и «Сохранить».", "To change the key: click the field, press a combination and “Save”.")));
 
             // Модель
             var rowModel = MakeFlow();
-            rowModel.Controls.Add(MakeRowLabel("Модель Whisper:"));
+            rowModel.Controls.Add(MakeRowLabel(L.T("Модель Whisper:", "Whisper model:")));
             cmbModel.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbModel.Width = 300;
             cmbModel.DropDownWidth = 360;
@@ -227,14 +228,14 @@ namespace VoiceDictate
                 if (m == null) return;
                 settings.Model = m.File;
                 SaveSettings();
-                Log("Модель: " + m.File + (m.Exists ? "" : " (не скачана — нажмите «Скачать»)"));
+                Log(L.T("Модель: ", "Model: ") + m.File + (m.Exists ? "" : L.T(" (не скачана — нажмите «Скачать»)", " (not downloaded — click “Download”)")));
             };
             rowModel.Controls.Add(cmbModel);
-            btnDownload.Text = "Скачать";
+            btnDownload.Text = L.T("Скачать", "Download");
             btnDownload.AutoSize = true;
             btnDownload.Click += (s, e) => DownloadModel();
             rowModel.Controls.Add(btnDownload);
-            btnTest.Text = "Проверить";
+            btnTest.Text = L.T("Проверить", "Test");
             btnTest.AutoSize = true;
             btnTest.Click += (s, e) => RunTest();
             rowModel.Controls.Add(btnTest);
@@ -242,7 +243,7 @@ namespace VoiceDictate
 
             // Микрофон
             var rowMic = MakeFlow();
-            rowMic.Controls.Add(MakeRowLabel("Микрофон:"));
+            rowMic.Controls.Add(MakeRowLabel(L.T("Микрофон:", "Microphone:")));
             cmbMic.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbMic.Width = 300;
             cmbMic.Margin = new Padding(3, 4, 3, 3);
@@ -262,7 +263,7 @@ namespace VoiceDictate
 
             // Видеокарта NVIDIA
             var rowGpu = MakeFlow();
-            chkGpu.Text = "Видеокарта NVIDIA (CUDA)";
+            chkGpu.Text = L.T("Видеокарта NVIDIA (CUDA)", "NVIDIA GPU (CUDA)");
             chkGpu.AutoSize = true;
             chkGpu.Margin = new Padding(3, 6, 3, 3);
             chkGpu.Checked = settings.UseGpu;
@@ -272,8 +273,8 @@ namespace VoiceDictate
                 WhisperEngine.UseGpu = chkGpu.Checked;
                 SaveSettings();
                 Log(chkGpu.Checked
-                    ? (WhisperEngine.CudaInstalled ? "Распознавание на видеокарте." : "Видеокарта включена, но ускорение не скачано — нажмите кнопку справа.")
-                    : "Распознавание на процессоре.");
+                    ? (WhisperEngine.CudaInstalled ? L.T("Распознавание на видеокарте.", "Recognition on the GPU.") : L.T("Видеокарта включена, но ускорение не скачано — нажмите кнопку справа.", "GPU is on, but acceleration is not downloaded — click the button on the right."))
+                    : L.T("Распознавание на процессоре.", "Recognition on the CPU."));
             };
             rowGpu.Controls.Add(chkGpu);
             btnCuda.AutoSize = true;
@@ -281,7 +282,7 @@ namespace VoiceDictate
             rowGpu.Controls.Add(btnCuda);
             root.Controls.Add(rowGpu);
 
-            chkAutoSend.Text = "Сразу отправлять распознанный текст в активное окно";
+            chkAutoSend.Text = L.T("Сразу отправлять распознанный текст в активное окно", "Send recognized text to the active window right away");
             chkAutoSend.AutoSize = true;
             chkAutoSend.Checked = settings.AutoSend;
             chkAutoSend.CheckedChanged += (s, e) => { settings.AutoSend = chkAutoSend.Checked; SaveSettings(); };
@@ -289,7 +290,7 @@ namespace VoiceDictate
 
             // Enter + задержка
             var rowEnter = MakeFlow();
-            chkEnter.Text = "Нажимать Enter после вставки, задержка (сек):";
+            chkEnter.Text = L.T("Нажимать Enter после вставки, задержка (сек):", "Press Enter after pasting, delay (s):");
             chkEnter.AutoSize = true;
             chkEnter.Margin = new Padding(3, 5, 3, 3);
             chkEnter.Checked = settings.PressEnter;
@@ -311,13 +312,13 @@ namespace VoiceDictate
             rowEnter.Controls.Add(numDelay);
             root.Controls.Add(rowEnter);
 
-            chkType.Text = "Печатать посимвольно (если Ctrl+V не работает)";
+            chkType.Text = L.T("Печатать посимвольно (если Ctrl+V не работает)", "Type character by character (if Ctrl+V does not work)");
             chkType.AutoSize = true;
             chkType.Checked = settings.TypeText;
             chkType.CheckedChanged += (s, e) => { settings.TypeText = chkType.Checked; SaveSettings(); };
             root.Controls.Add(chkType);
 
-            chkTopMost.Text = "Окно поверх остальных";
+            chkTopMost.Text = L.T("Окно поверх остальных", "Window always on top");
             chkTopMost.AutoSize = true;
             chkTopMost.Checked = settings.TopMost;
             chkTopMost.CheckedChanged += (s, e) =>
@@ -335,7 +336,7 @@ namespace VoiceDictate
             lblStatus.Font = new Font("Segoe UI", 11f, FontStyle.Bold);
             root.Controls.Add(lblStatus);
 
-            root.Controls.Add(MakeLabel("Распознанный текст (можно поправить руками):"));
+            root.Controls.Add(MakeLabel(L.T("Распознанный текст (можно поправить руками):", "Recognized text (you can edit it):")));
 
             txtText.Multiline = true;
             txtText.ScrollBars = ScrollBars.Vertical;
@@ -347,17 +348,17 @@ namespace VoiceDictate
             btnDictate.AutoSize = true;
             btnDictate.Click += (s, e) => Toggle();
             btnSend.AutoSize = true;
-            btnSend.Text = "Отправить";
+            btnSend.Text = L.T("Отправить", "Send");
             btnSend.Click += (s, e) => SendNow();
             btnClear.AutoSize = true;
-            btnClear.Text = "Очистить";
+            btnClear.Text = L.T("Очистить", "Clear");
             btnClear.Click += (s, e) => txtText.Clear();
             rowButtons.Controls.Add(btnDictate);
             rowButtons.Controls.Add(btnSend);
             rowButtons.Controls.Add(btnClear);
             root.Controls.Add(rowButtons);
 
-            root.Controls.Add(MakeLabel("Журнал:"));
+            root.Controls.Add(MakeLabel(L.T("Журнал:", "Log:")));
 
             txtLog.Multiline = true;
             txtLog.ReadOnly = true;
@@ -417,7 +418,7 @@ namespace VoiceDictate
             try
             {
                 cmbMic.Items.Clear();
-                cmbMic.Items.Add("По умолчанию (как в Windows)");
+                cmbMic.Items.Add(L.T("По умолчанию (как в Windows)", "Default (as in Windows)"));
                 foreach (string name in Recorder.GetDevices()) cmbMic.Items.Add(name);
                 int idx = settings.MicDevice + 1;
                 cmbMic.SelectedIndex = idx >= 0 && idx < cmbMic.Items.Count ? idx : 0;
@@ -476,7 +477,7 @@ namespace VoiceDictate
             };
             row.Controls.Add(box);
 
-            var btn = new Button { Text = "Сохранить", AutoSize = true };
+            var btn = new Button { Text = L.T("Сохранить", "Save"), AutoSize = true };
             btn.Click += (s, e) => SaveHotkey(slot);
             row.Controls.Add(btn);
 
@@ -540,7 +541,7 @@ namespace VoiceDictate
         {
             recording = on;
             led.On = on;
-            lblLed.Text = on ? "идёт запись" : "ожидание";
+            lblLed.Text = on ? L.T("идёт запись", "recording") : L.T("ожидание", "idle");
             lblLed.ForeColor = on ? Color.FromArgb(30, 150, 50) : ColorRed;
             if (!on) barLevel.Value = 0;
             UpdateStatus();
@@ -556,7 +557,7 @@ namespace VoiceDictate
         private void UpdateStatusCore()
         {
             string k = slotDictate.Saved;
-            btnDictate.Text = recording ? "Стоп и распознать (" + k + ")" : "Записать (" + k + ")";
+            btnDictate.Text = recording ? L.T("Стоп и распознать (", "Stop and recognize (") + k + ")" : L.T("Записать (", "Record (") + k + ")";
             btnDictate.Enabled = !busy;
             btnSend.Enabled = !busy && !recording;
             btnClear.Enabled = !busy;
@@ -564,16 +565,16 @@ namespace VoiceDictate
             btnDownload.Enabled = !downloading;
             btnCuda.Enabled = !downloading && !busy && !recording;
             btnCuda.Text = WhisperEngine.CudaInstalled
-                ? "Ускорение NVIDIA установлено ✓"
-                : "Скачать ускорение NVIDIA (~" + WhisperEngine.CudaSizeMb + " МБ)";
+                ? L.T("Ускорение NVIDIA установлено ✓", "NVIDIA acceleration installed ✓")
+                : L.T("Скачать ускорение NVIDIA (~", "Download NVIDIA acceleration (~") + WhisperEngine.CudaSizeMb + L.T(" МБ)", " MB)");
             cmbModel.Enabled = !busy && !recording && !downloading;
             cmbMic.Enabled = !recording;
             if (busy || downloading) return;
             if (recording)
-                SetStatus("Идёт запись " + FormatTime(RecSeconds) + ". " + k + " — распознать и отправить",
+                SetStatus(L.T("Идёт запись ", "Recording ") + FormatTime(RecSeconds) + ". " + k + L.T(" — распознать и отправить", " — recognize and send"),
                     ColorGreen);
             else
-                SetStatus("Готов. " + k + " — начать запись", ColorGray);
+                SetStatus(L.T("Готов. ", "Ready. ") + k + L.T(" — начать запись", " — start recording"), ColorGray);
         }
 
         private static string FormatTime(double sec)
@@ -591,7 +592,7 @@ namespace VoiceDictate
             Keys key;
             if (!HotkeyUtil.TryParse(text, out mods, out key))
             {
-                error = "не удалось разобрать сочетание";
+                error = L.T("не удалось разобрать сочетание", "could not parse the key combination");
                 return false;
             }
             Unregister(slot);
@@ -599,8 +600,8 @@ namespace VoiceDictate
             {
                 int code = Marshal.GetLastWin32Error();
                 error = code == ERROR_HOTKEY_ALREADY_REGISTERED
-                    ? "сочетание уже занято другой программой"
-                    : "ошибка Windows " + code;
+                    ? L.T("сочетание уже занято другой программой", "the combination is already used by another program")
+                    : L.T("ошибка Windows ", "Windows error ") + code;
                 return false;
             }
             slot.Registered = true;
@@ -619,7 +620,7 @@ namespace VoiceDictate
         {
             string err;
             if (!RegisterSlot(slot, slot.Saved, out err))
-                Log("Клавиша " + what + " «" + slot.Saved + "» не зарегистрирована: " + err + ". Задайте другую.");
+                Log(L.T("Клавиша ", "Hotkey ") + what + " «" + slot.Saved + L.T("» не зарегистрирована: ", "” is not registered: ") + err + L.T(". Задайте другую.", ". Choose another one."));
         }
 
         private void SaveHotkey(HotkeySlot slot)
@@ -632,7 +633,7 @@ namespace VoiceDictate
             bool ok = HotkeyUtil.TryParse(wanted, out m, out k);
             if (!ok)
             {
-                err = "не удалось разобрать сочетание";
+                err = L.T("не удалось разобрать сочетание", "could not parse the key combination");
             }
             else
             {
@@ -646,13 +647,13 @@ namespace VoiceDictate
                 slot.Box.Text = wanted;
                 settings.HotkeyDictate = wanted;
                 SaveSettings();
-                Log("Клавиша сохранена: " + wanted);
+                Log(L.T("Клавиша сохранена: ", "Hotkey saved: ") + wanted);
                 UpdateStatus();
             }
             else
             {
-                Log("Клавиша «" + wanted + "» не подходит: " + err);
-                MessageBox.Show(this, "Клавиша «" + wanted + "» не подходит: " + err,
+                Log(L.T("Клавиша «", "Hotkey “") + wanted + L.T("» не подходит: ", "” cannot be used: ") + err);
+                MessageBox.Show(this, L.T("Клавиша «", "Hotkey “") + wanted + L.T("» не подходит: ", "” cannot be used: ") + err,
                     Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 string err2;
                 RegisterSlot(slot, slot.Saved, out err2);
@@ -676,7 +677,7 @@ namespace VoiceDictate
         {
             if (busy)
             {
-                Log("Подождите — ещё идёт распознавание.");
+                Log(L.T("Подождите — ещё идёт распознавание.", "Please wait — recognition is still running."));
                 return;
             }
             if (micStarting) return;   // веб-микрофон ещё включается
@@ -696,20 +697,20 @@ namespace VoiceDictate
             bool viaBrowser = settings.MicSource == "browser";
             bool viaWeb = viaBrowser || (settings.MicSource == "web" && webMode && webReady);
             if (settings.MicSource == "web" && !viaWeb)
-                Log("Запись через веб работает только в новом окне программы, а оно не загружено — пишу напрямую.");
+                Log(L.T("Запись через веб работает только в новом окне программы, а оно не загружено — пишу напрямую.", "Web recording works only in the new program window, which is not loaded — recording directly."));
             if (viaBrowser)
             {
                 if (!StartBrowserMic())
                 {
-                    SetStatus("Микрофон недоступен", ColorRed);
+                    SetStatus(L.T("Микрофон недоступен", "Microphone unavailable"), ColorRed);
                     return;
                 }
                 if (!browserMic.Connected)
                 {
                     OpenBrowserMicPage();
-                    Log("Открыл в браузере страницу микрофона " + BrowserMic.Url + ". Нажмите там «Подключить " +
-                        "микрофон», разрешите доступ, оставьте вкладку открытой и снова нажмите " + slotDictate.Saved + ".");
-                    SetStatus("Подключите микрофон в браузере", ColorRed);
+                    Log(L.T("Открыл в браузере страницу микрофона ", "Opened the microphone page in the browser: ") + BrowserMic.Url + L.T(". Нажмите там «Подключить ", ". Click “Connect ") +
+                        L.T("микрофон», разрешите доступ, оставьте вкладку открытой и снова нажмите ", "microphone” there, allow access, keep the tab open and press again: ") + slotDictate.Saved + ".");
+                    SetStatus(L.T("Подключите микрофон в браузере", "Connect the microphone in the browser"), ColorRed);
                     return;
                 }
                 webRecorder.Target = browserMic.Send;
@@ -723,7 +724,7 @@ namespace VoiceDictate
                 if (viaWeb)
                 {
                     micStarting = true;
-                    SetStatus("Включаю микрофон…", ColorAmber);
+                    SetStatus(L.T("Включаю микрофон…", "Turning on the microphone…"), ColorAmber);
                     await webRecorder.Start(cmbMic.SelectedIndex > 0 ? cmbMic.Text : "");
                     if (IsDisposed) return;
                 }
@@ -734,12 +735,12 @@ namespace VoiceDictate
             }
             catch (Exception ex)
             {
-                Log("Не удалось начать запись" + (viaBrowser ? " через браузер" : viaWeb ? " через веб" : "") + ": " +
+                Log(L.T("Не удалось начать запись", "Could not start recording") + (viaBrowser ? L.T(" через браузер", " via browser") : viaWeb ? L.T(" через веб", " via web") : "") + ": " +
                     ex.Message);
                 if (!viaBrowser)
-                    Log("Если микрофон блокирует антивирус (например, Касперский), выберите в настройках " +
-                        "«Запись звука: через браузер».");
-                SetStatus("Микрофон недоступен", ColorRed);
+                    Log(L.T("Если микрофон блокирует антивирус (например, Касперский), выберите в настройках ", "If an antivirus (e.g. Kaspersky) blocks the microphone, choose in Settings ") +
+                        L.T("«Запись звука: через браузер».", "“Audio capture: via browser”."));
+                SetStatus(L.T("Микрофон недоступен", "Microphone unavailable"), ColorRed);
                 return;
             }
             finally
@@ -750,7 +751,7 @@ namespace VoiceDictate
             recTimer.Start();
             SetRecording(true);
             string mic = viaWeb && !string.IsNullOrEmpty(webRecorder.DeviceName) ? webRecorder.DeviceName : cmbMic.Text;
-            Log("Запись началась" + (viaBrowser ? " через браузер" : viaWeb ? " через веб" : "") + " (" + mic + "). Говорите, потом " +
+            Log(L.T("Запись началась", "Recording started") + (viaBrowser ? L.T(" через браузер", " via browser") : viaWeb ? L.T(" через веб", " via web") : "") + " (" + mic + L.T("). Говорите, потом ", "). Speak, then press ") +
                 slotDictate.Saved + ".");
         }
 
@@ -762,15 +763,15 @@ namespace VoiceDictate
             SaveSettings();
             if (src == "browser")
             {
-                Log("Запись звука: через браузер. Сейчас откроется страница " + BrowserMic.Url +
-                    " — нажмите там «Подключить микрофон» и оставьте вкладку открытой.");
+                Log(L.T("Запись звука: через браузер. Сейчас откроется страница ", "Audio capture: via browser. The page will open now: ") + BrowserMic.Url +
+                    L.T(" — нажмите там «Подключить микрофон» и оставьте вкладку открытой.", " — click “Connect microphone” there and keep the tab open."));
                 if (StartBrowserMic()) OpenBrowserMicPage();
             }
             else
             {
                 Log(src == "web"
-                    ? "Запись звука: через веб (микрофон открывает движок окна программы)."
-                    : "Запись звука: напрямую.");
+                    ? L.T("Запись звука: через веб (микрофон открывает движок окна программы).", "Audio capture: via web (the program window engine opens the microphone).")
+                    : L.T("Запись звука: напрямую.", "Audio capture: direct."));
             }
         }
 
@@ -797,7 +798,7 @@ namespace VoiceDictate
             catch (Exception ex)
             {
                 mic.Dispose();
-                Log("Не удалось запустить запись через браузер: " + ex.Message);
+                Log(L.T("Не удалось запустить запись через браузер: ", "Could not start browser recording: ") + ex.Message);
                 return false;
             }
             browserMic = mic;
@@ -808,11 +809,11 @@ namespace VoiceDictate
         {
             try
             {
-                Process.Start(new ProcessStartInfo(BrowserMic.Url) { UseShellExecute = true });
+                Process.Start(new ProcessStartInfo(BrowserMic.Url + "?lang=" + L.Code) { UseShellExecute = true });
             }
             catch (Exception ex)
             {
-                Log("Не удалось открыть браузер: " + ex.Message + ". Откройте вручную: " + BrowserMic.Url);
+                Log(L.T("Не удалось открыть браузер: ", "Could not open the browser: ") + ex.Message + L.T(". Откройте вручную: ", ". Open it manually: ") + BrowserMic.Url);
             }
         }
 
@@ -821,7 +822,7 @@ namespace VoiceDictate
             if (IsDisposed) return;
             if (msg.StartsWith("hello", StringComparison.Ordinal))
             {
-                Log("Браузер подключил микрофон. Вкладку не закрывайте — " + slotDictate.Saved + " начинает запись.");
+                Log(L.T("Браузер подключил микрофон. Вкладку не закрывайте — ", "The browser connected the microphone. Keep the tab open — ") + slotDictate.Saved + L.T(" начинает запись.", " starts recording."));
                 return;
             }
             OnWebMicMessage(msg);
@@ -839,7 +840,7 @@ namespace VoiceDictate
             string cmd = bar < 0 ? msg : msg.Substring(0, bar);
             string arg = bar < 0 ? "" : msg.Substring(bar + 1);
             string error = webRecorder.OnMessage(cmd, arg);
-            if (error != null) Log("Микрофон (через веб): " + error);
+            if (error != null) Log(L.T("Микрофон (через веб): ", "Microphone (via web): ") + error);
         }
 
         private void OnRecTick()
@@ -854,7 +855,7 @@ namespace VoiceDictate
                 }
                 catch (Exception ex)
                 {
-                    Log("Ошибка записи: " + ex.Message);
+                    Log(L.T("Ошибка записи: ", "Recording error: ") + ex.Message);
                 }
                 level = recorder.LastLevel;
             }
@@ -890,7 +891,7 @@ namespace VoiceDictate
                 busy = false;
                 webRecording = false;
                 SetRecording(false);
-                Log("Ошибка при остановке записи: " + ex.Message);
+                Log(L.T("Ошибка при остановке записи: ", "Error while stopping recording: ") + ex.Message);
                 return;
             }
             webRecording = false;
@@ -901,60 +902,60 @@ namespace VoiceDictate
                 double sec = samples.Length / (double)Recorder.SampleRate;
                 if (sec < 0.3)
                 {
-                    Log("Запись слишком короткая — нечего распознавать.");
+                    Log(L.T("Запись слишком короткая — нечего распознавать.", "The recording is too short — nothing to recognize."));
                     return;
                 }
                 if (maxLevel <= 0f && viaWeb)
                 {
-                    Log("Микрофон прислал полную тишину и через веб. Проверьте, тот ли микрофон выбран, и что " +
-                        "в браузере на этом компьютере микрофон работает. Если нет — доступ, скорее всего, " +
-                        "блокирует антивирус для всех программ, нужно обратиться к администратору.");
+                    Log(L.T("Микрофон прислал полную тишину и через веб. Проверьте, тот ли микрофон выбран, и что ", "The microphone sent complete silence via web too. Check that the right microphone is selected and that ") +
+                        L.T("в браузере на этом компьютере микрофон работает. Если нет — доступ, скорее всего, ", "the microphone works in a browser on this computer. If not, access is most likely ") +
+                        L.T("блокирует антивирус для всех программ, нужно обратиться к администратору.", "blocked by an antivirus for all programs — contact your administrator."));
                     return;
                 }
                 if (maxLevel <= 0f)
                 {
-                    Log("Микрофон прислал полную тишину. В Windows 10/11 проверьте: Параметры → Конфиденциальность → " +
-                        "Микрофон → «Разрешить приложениям доступ к микрофону» и «Разрешить классическим " +
-                        "приложениям…». И выберите правильный микрофон в списке. Если звук режет антивирус " +
-                        "(например, Касперский), включите в настройках «Запись звука: через веб».");
+                    Log(L.T("Микрофон прислал полную тишину. В Windows 10/11 проверьте: Параметры → Конфиденциальность → ", "The microphone sent complete silence. In Windows 10/11 check: Settings → Privacy → ") +
+                        L.T("Микрофон → «Разрешить приложениям доступ к микрофону» и «Разрешить классическим ", "Microphone → “Allow apps to access your microphone” and “Allow desktop ") +
+                        L.T("приложениям…». И выберите правильный микрофон в списке. Если звук режет антивирус ", "apps…”. And pick the right microphone in the list. If an antivirus cuts the sound ") +
+                        L.T("(например, Касперский), включите в настройках «Запись звука: через веб».", "(e.g. Kaspersky), choose “Audio capture: via browser” in Settings."));
                     return;
                 }
                 if (maxLevel < 0.004f)
                 {
-                    Log("Очень тихо — микрофон почти ничего не услышал (" + FormatTime(sec) + "). " +
-                        "Проверьте, тот ли микрофон выбран.");
+                    Log(L.T("Очень тихо — микрофон почти ничего не услышал (", "Very quiet — the microphone heard almost nothing (") + FormatTime(sec) + "). " +
+                        L.T("Проверьте, тот ли микрофон выбран.", "Check that the right microphone is selected."));
                     return;
                 }
 
                 string wav = Path.Combine(WhisperEngine.WorkDir, "rec.wav");
                 Recorder.SaveWav(wav, samples);
 
-                SetStatus("Распознаю " + FormatTime(sec) + " записи…", ColorAmber);
-                Log("Распознаю " + sec.ToString("0.0") + " с записи " + EngineDescription() + "…");
+                SetStatus(L.T("Распознаю ", "Recognizing ") + FormatTime(sec) + L.T(" записи…", " of audio…"), ColorAmber);
+                Log(L.T("Распознаю ", "Recognizing ") + sec.ToString("0.0") + L.T(" с записи ", " s of audio ") + EngineDescription() + "…");
 
                 WhisperEngine.Result res = await TranscribeAsync(wav);
 
                 if (res.Error != null)
                 {
-                    Log("Ошибка распознавания: " + res.Error);
+                    Log(L.T("Ошибка распознавания: ", "Recognition error: ") + res.Error);
                     if (!string.IsNullOrEmpty(res.Details)) Log("whisper: " + res.Details);
                     return;
                 }
                 if (res.Text.Length == 0)
                 {
-                    Log("Whisper ничего не распознал (" + res.Seconds.ToString("0.0") + " с).");
+                    Log(L.T("Whisper ничего не распознал (", "Whisper recognized nothing (") + res.Seconds.ToString("0.0") + L.T(" с).", " s)."));
                     return;
                 }
 
-                Log("Распознано за " + res.Seconds.ToString("0.0") + " с (" + res.Device + "): " + res.Text);
+                Log(L.T("Распознано за ", "Recognized in ") + res.Seconds.ToString("0.0") + L.T(" с (", " s (") + res.Device + "): " + res.Text);
                 AppendText(res.Text);
 
                 if (settings.AutoSend) await SendText();
-                else Log("Текст в поле. Нажмите «Отправить», когда будете готовы.");
+                else Log(L.T("Текст в поле. Нажмите «Отправить», когда будете готовы.", "The text is in the field. Click “Send” when ready."));
             }
             catch (Exception ex)
             {
-                Log("Ошибка: " + ex.Message);
+                Log(L.T("Ошибка: ", "Error: ") + ex.Message);
             }
             finally
             {
@@ -983,7 +984,7 @@ namespace VoiceDictate
             }
             catch (Exception ex)
             {
-                Log("Не удалось отправить: " + ex.Message);
+                Log(L.T("Не удалось отправить: ", "Could not send: ") + ex.Message);
             }
             finally
             {
@@ -997,11 +998,11 @@ namespace VoiceDictate
             string text = txtText.Text.Trim();
             if (text.Length == 0)
             {
-                Log("Отправлять нечего — поле пустое.");
+                Log(L.T("Отправлять нечего — поле пустое.", "Nothing to send — the field is empty."));
                 return;
             }
 
-            SetStatus("Отправляю…", ColorAmber);
+            SetStatus(L.T("Отправляю…", "Sending…"), ColorAmber);
             await WaitKeysReleased(slotDictate.Key);
 
             IntPtr target = Native.GetForegroundWindow();
@@ -1011,8 +1012,8 @@ namespace VoiceDictate
                 target = lastExternal;
                 if (target == IntPtr.Zero || !Native.IsWindow(target))
                 {
-                    Log("Не знаю, куда отправлять: щёлкните мышкой нужное окно и нажмите «Отправить». " +
-                        "Текст остался в поле.");
+                    Log(L.T("Не знаю, куда отправлять: щёлкните мышкой нужное окно и нажмите «Отправить». ", "Not sure where to send: click the target window and press “Send”. ") +
+                        L.T("Текст остался в поле.", "The text stays in the field."));
                     return;
                 }
                 Native.ForceForeground(target);
@@ -1020,7 +1021,7 @@ namespace VoiceDictate
             }
 
             SetClipboard(text);
-            Log("Отправляю в: " + Native.GetTitle(target));
+            Log(L.T("Отправляю в: ", "Sending to: ") + Native.GetTitle(target));
 
             if (settings.TypeText)
             {
@@ -1045,8 +1046,8 @@ namespace VoiceDictate
 
             txtText.Clear();
             Log(settings.PressEnter
-                ? "Отправлено, Enter через " + settings.EnterDelay.ToString("0.##") + " с. Поле очищено."
-                : "Вставлено. Поле очищено.");
+                ? L.T("Отправлено, Enter через ", "Sent, Enter after ") + settings.EnterDelay.ToString("0.##") + L.T(" с. Поле очищено.", " s. Field cleared.")
+                : L.T("Вставлено. Поле очищено.", "Pasted. Field cleared."));
         }
 
         // ================================================================ модель: скачать и проверить
@@ -1057,31 +1058,31 @@ namespace VoiceDictate
             if (model == null || downloading) return;
             if (model.Exists)
             {
-                Log("Модель " + model.File + " уже скачана. Нажмите «Проверить».");
+                Log(L.T("Модель ", "Model ") + model.File + L.T(" уже скачана. Нажмите «Проверить».", " is already downloaded. Click “Test”."));
                 return;
             }
             if (!Array.Exists(WhisperEngine.Known, k => k.File == model.File))
             {
-                Log("Эту модель программа скачать не может — положите файл в папку models сами.");
+                Log(L.T("Эту модель программа скачать не может — положите файл в папку models сами.", "The program cannot download this model — put the file into the models folder yourself."));
                 return;
             }
 
             downloading = true;
             UpdateStatus();
-            SetStatus("Скачиваю модель…", ColorAmber);
+            SetStatus(L.T("Скачиваю модель…", "Downloading the model…"), ColorAmber);
             try
             {
                 await WhisperEngine.DownloadAsync(model,
                     (frac, mb) => OnUi(() =>
                     {
                         string pct = frac >= 0 ? ((int)(frac * 100)) + "%, " : "";
-                        SetStatus("Скачиваю модель: " + pct + mb.ToString("0") + " из ~" + model.SizeMb + " МБ",
+                        SetStatus(L.T("Скачиваю модель: ", "Downloading the model: ") + pct + mb.ToString("0") + L.T(" из ~", " of ~") + model.SizeMb + L.T(" МБ", " MB"),
                             ColorAmber);
                         WebProgress("model", frac, mb);
                     }),
                     msg => OnUi(() => Log(msg)),
                     closing.Token);
-                Log("Модель скачана: " + model.FullPath + ". Нажмите «Проверить».");
+                Log(L.T("Модель скачана: ", "Model downloaded: ") + model.FullPath + L.T(". Нажмите «Проверить».", ". Click “Test”."));
             }
             catch (OperationCanceledException)
             {
@@ -1089,9 +1090,9 @@ namespace VoiceDictate
             }
             catch (Exception ex)
             {
-                Log("Ошибка: " + ex.Message);
-                Log("Можно скачать вручную: " + WhisperEngine.ModelUrlHf + model.File +
-                    " и положить файл в папку " + WhisperEngine.ModelsDir);
+                Log(L.T("Ошибка: ", "Error: ") + ex.Message);
+                Log(L.T("Можно скачать вручную: ", "You can download it manually: ") + WhisperEngine.ModelUrlHf + model.File +
+                    L.T(" и положить файл в папку ", " and put the file into ") + WhisperEngine.ModelsDir);
             }
             finally
             {
@@ -1109,25 +1110,25 @@ namespace VoiceDictate
             if (downloading || busy || recording) return;
             if (WhisperEngine.CudaInstalled)
             {
-                Log("Ускорение NVIDIA уже установлено (папка whisper-cuda). Нажмите «Проверить».");
+                Log(L.T("Ускорение NVIDIA уже установлено (папка whisper-cuda). Нажмите «Проверить».", "NVIDIA acceleration is already installed (whisper-cuda folder). Click “Test”."));
                 return;
             }
             downloading = true;
             UpdateStatus();
-            SetStatus("Скачиваю ускорение NVIDIA…", ColorAmber);
+            SetStatus(L.T("Скачиваю ускорение NVIDIA…", "Downloading NVIDIA acceleration…"), ColorAmber);
             try
             {
                 await WhisperEngine.DownloadCudaAsync(
                     (frac, mb) => OnUi(() =>
                     {
                         string pct = frac >= 0 ? ((int)(frac * 100)) + "%, " : "";
-                        SetStatus("Скачиваю ускорение NVIDIA: " + pct + mb.ToString("0") + " МБ", ColorAmber);
+                        SetStatus(L.T("Скачиваю ускорение NVIDIA: ", "Downloading NVIDIA acceleration: ") + pct + mb.ToString("0") + L.T(" МБ", " MB"), ColorAmber);
                         WebProgress("cuda", frac, mb);
                     }),
                     msg => OnUi(() => Log(msg)),
                     closing.Token);
-                Log("Ускорение NVIDIA установлено в " + WhisperEngine.CudaDir + ". Нажмите «Проверить» — " +
-                    "в журнале должно быть «видеокарта NVIDIA …».");
+                Log(L.T("Ускорение NVIDIA установлено в ", "NVIDIA acceleration installed to ") + WhisperEngine.CudaDir + L.T(". Нажмите «Проверить» — ", ". Click “Test” — ") +
+                    L.T("в журнале должно быть «видеокарта NVIDIA …».", "the log should say “GPU NVIDIA …”."));
                 if (!chkGpu.Checked) chkGpu.Checked = true;
             }
             catch (OperationCanceledException)
@@ -1136,9 +1137,9 @@ namespace VoiceDictate
             }
             catch (Exception ex)
             {
-                Log("Не удалось установить ускорение: " + ex.Message);
-                Log("Можно вручную: скачайте " + WhisperEngine.CudaUrl + ", распакуйте файлы из папки Release " +
-                    "в " + WhisperEngine.CudaDir + " и скопируйте туда же DLL из папки whisper.");
+                Log(L.T("Не удалось установить ускорение: ", "Could not install acceleration: ") + ex.Message);
+                Log(L.T("Можно вручную: скачайте ", "Manually: download ") + WhisperEngine.CudaUrl + L.T(", распакуйте файлы из папки Release ", ", unpack the files from the Release folder ") +
+                    L.T("в ", "into ") + WhisperEngine.CudaDir + L.T(" и скопируйте туда же DLL из папки whisper.", " and copy the DLLs from the whisper folder there too."));
             }
             finally
             {
@@ -1153,49 +1154,49 @@ namespace VoiceDictate
             var model = SelectedModel();
             if (!settings.Cloud && (model == null || !model.Exists))
             {
-                Log("Сначала скачайте модель (кнопка «Скачать»).");
+                Log(L.T("Сначала скачайте модель (кнопка «Скачать»).", "Download a model first (the “Download” button)."));
                 return;
             }
             if (settings.Cloud && string.IsNullOrEmpty(settings.OpenRouterKey))
             {
-                Log("Сначала вставьте ключ OpenRouter в настройках.");
+                Log(L.T("Сначала вставьте ключ OpenRouter в настройках.", "Paste your OpenRouter key in Settings first."));
                 return;
             }
             if (!File.Exists(WhisperEngine.TestWavPath))
             {
-                Log("Нет тестового файла " + WhisperEngine.TestWavPath);
+                Log(L.T("Нет тестового файла ", "Test file not found: ") + WhisperEngine.TestWavPath);
                 return;
             }
 
             busy = true;
             UpdateStatus();
-            SetStatus(settings.Cloud ? "Проверка OpenRouter…" : "Проверка Whisper…", ColorAmber);
+            SetStatus(settings.Cloud ? L.T("Проверка OpenRouter…", "Testing OpenRouter…") : L.T("Проверка Whisper…", "Testing Whisper…"), ColorAmber);
             if (!settings.Cloud && WhisperEngine.UseGpu && WhisperEngine.CudaInstalled)
-                Log("Первый запуск на новой видеокарте (RTX 50xx) может занять несколько минут: драйвер готовит код. " +
-                    "Дальше будет быстро.");
-            Log("Проверка: распознаю тестовую запись (синтезированный голос) " + EngineDescription() + "…");
+                Log(L.T("Первый запуск на новой видеокарте (RTX 50xx) может занять несколько минут: драйвер готовит код. ", "The first run on a new GPU (RTX 50xx) may take a few minutes: the driver is preparing code. ") +
+                    L.T("Дальше будет быстро.", "After that it will be fast."));
+            Log(L.T("Проверка: распознаю тестовую запись (синтезированный голос) ", "Test: recognizing the test recording (synthesized voice) ") + EngineDescription() + "…");
             try
             {
                 WhisperEngine.Result res = await TranscribeAsync(WhisperEngine.TestWavPath);
                 if (res.Error != null)
                 {
-                    Log("Проверка не прошла: " + res.Error);
+                    Log(L.T("Проверка не прошла: ", "Test failed: ") + res.Error);
                     if (!string.IsNullOrEmpty(res.Details)) Log("whisper: " + res.Details);
                 }
                 else
                 {
-                    Log("Проверка прошла за " + res.Seconds.ToString("0.0") + " с (" + res.Device + "). Распознано: «" +
+                    Log(L.T("Проверка прошла за ", "Test passed in ") + res.Seconds.ToString("0.0") + L.T(" с (", " s (") + res.Device + L.T("). Распознано: «", "). Recognized: “") +
                         res.Text + "»");
-                    Log("Должно быть примерно: «Привет! Это проверка распознавания речи. " +
-                        "Если вы видите этот текст, всё работает.»");
-                    Log("Теперь проверьте микрофон: нажмите " + slotDictate.Saved +
-                        ", скажите фразу (полоска громкости должна прыгать) и нажмите " + slotDictate.Saved +
-                        " ещё раз.");
+                    Log(L.T("Должно быть примерно: «Привет! Это проверка распознавания речи. ", "It should be roughly (in Russian): “Привет! Это проверка распознавания речи. ") +
+                        L.T("Если вы видите этот текст, всё работает.»", "Если вы видите этот текст, всё работает.”"));
+                    Log(L.T("Теперь проверьте микрофон: нажмите ", "Now test the microphone: press ") + slotDictate.Saved +
+                        L.T(", скажите фразу (полоска громкости должна прыгать) и нажмите ", ", say a phrase (the volume bar should move) and press ") + slotDictate.Saved +
+                        L.T(" ещё раз.", " again."));
                 }
             }
             catch (Exception ex)
             {
-                Log("Ошибка: " + ex.Message);
+                Log(L.T("Ошибка: ", "Error: ") + ex.Message);
             }
             finally
             {
@@ -1246,7 +1247,7 @@ namespace VoiceDictate
             }
             catch (Exception ex)
             {
-                Log("Не удалось положить текст в буфер: " + ex.Message);
+                Log(L.T("Не удалось положить текст в буфер: ", "Could not put the text on the clipboard: ") + ex.Message);
             }
         }
 
@@ -1258,7 +1259,7 @@ namespace VoiceDictate
             }
             catch (Exception ex)
             {
-                Log("Не удалось сохранить настройки: " + ex.Message);
+                Log(L.T("Не удалось сохранить настройки: ", "Could not save settings: ") + ex.Message);
             }
         }
     }

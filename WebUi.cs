@@ -43,11 +43,13 @@ namespace VoiceDictate
             {
                 using (Stream st = typeof(WebUi).Assembly.GetManifestResourceStream("VoiceDictate.ui." + file))
                 {
-                    if (st == null) throw new InvalidOperationException("в программе нет файла ui\\" + file);
+                    if (st == null) throw new InvalidOperationException(L.T("в программе нет файла ui\\", "the program has no file ui\\") + file);
                     using (var r = new StreamReader(st, Encoding.UTF8)) html = r.ReadToEnd();
                 }
             }
             if (dark) html = html.Replace("<html lang=\"ru\">", "<html lang=\"ru\" data-theme=\"dark\">");
+            // английский интерфейс — сразу, чтобы страница не мелькала русским текстом
+            if (L.En) html = html.Replace("<html lang=\"ru\"", "<html lang=\"en\" data-lang=\"en\"");
             return html;
         }
 

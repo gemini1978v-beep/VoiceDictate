@@ -18,8 +18,25 @@ namespace VoiceDictate
         public string OpenRouterModel = OpenRouter.DefaultModel;
         public int MicDevice = -1;            // -1 — микрофон по умолчанию
         public string MicSource = "direct";   // запись звука: direct — WinAPI, web — страница окна, browser — вкладка браузера
-        public string Language = "ru";
+        public const string DefaultPromptEn =
+            "Hello. This is text in English, with correct punctuation: commas, periods, and questions?";
+
+        public string UiLang;                 // ui_lang = ru / en — язык окна; по умолчанию как у Windows
+        public string Language;               // язык речи; по умолчанию ru для русского окна, иначе auto
         public string Prompt = DefaultPrompt;
+
+        /// <summary>
+        /// Подсказка для Whisper. Стандартная русская мешает распознавать другие языки,
+        /// поэтому для английского берём английскую, для остальных — никакой.
+        /// </summary>
+        public string EffectivePrompt
+        {
+            get
+            {
+                if (Prompt != DefaultPrompt || Language == "ru") return Prompt;
+                return Language == "en" ? DefaultPromptEn : "";
+            }
+        }
         public bool UseGpu = true;            // видеокарта NVIDIA, если скачано ускорение
         public bool AutoSend = true;          // сразу отправлять распознанный текст
         public bool PressEnter = false;
@@ -41,7 +58,7 @@ namespace VoiceDictate
             var s = new Settings();
             try
             {
-                if (!File.Exists(FilePath)) return s;
+                if (!File.Exists(FilePath)) return s.WithDefaults();
                 foreach (string raw in File.ReadAllLines(FilePath, Encoding.UTF8))
                 {
                     string line = raw.Trim();
@@ -75,6 +92,9 @@ namespace VoiceDictate
                         case "mic_source":
                             string src = val.Trim().ToLowerInvariant();
                             s.MicSource = src == "web" || src == "browser" ? src : "direct";
+                            break;
+                        case "ui_lang":
+                            s.UiLang = val.Trim().ToLowerInvariant();
                             break;
                         case "language":
                             if (val.Length > 0) s.Language = val;
@@ -123,7 +143,14 @@ namespace VoiceDictate
             {
                 // битый файл — работаем на значениях по умолчанию
             }
-            return s;
+            return s.WithDefaults();
+        }
+
+        private Settings WithDefaults()
+        {
+            if (UiLang != "ru" && UiLang != "en") UiLang = L.SystemDefault();
+            if (string.IsNullOrEmpty(Language)) Language = UiLang == "ru" ? "ru" : "auto";
+            return this;
         }
 
         public void Save()
@@ -131,6 +158,8 @@ namespace VoiceDictate
             var sb = new StringBuilder();
             sb.AppendLine("; Настройки программы. Их удобнее менять прямо в окне.");
             sb.AppendLine("[general]");
+            sb.AppendLine("; Язык окна / Window language: ru, en");
+            sb.AppendLine("ui_lang = " + UiLang);
             sb.AppendLine("; Клавиша: 1-е нажатие — запись с микрофона, 2-е — распознать (Whisper) и отправить");
             sb.AppendLine("hotkey_dictate = " + HotkeyDictate);
             sb.AppendLine("; Файл модели Whisper в папке models");

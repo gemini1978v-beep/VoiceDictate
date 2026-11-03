@@ -126,7 +126,7 @@ namespace VoiceDictate
                     if (waveInGetDevCaps(new IntPtr(i), ref caps, Marshal.SizeOf(typeof(WAVEINCAPS))) == MMSYSERR_NOERROR)
                         list.Add(caps.szPname);
                     else
-                        list.Add("Микрофон " + (i + 1));
+                        list.Add(L.T("Микрофон ", "Microphone ") + (i + 1));
                 }
             }
             catch
@@ -157,8 +157,8 @@ namespace VoiceDictate
             {
                 hwi = IntPtr.Zero;
                 throw new InvalidOperationException(rc == 2 || rc == 6
-                    ? "микрофон не найден (код " + rc + ")"
-                    : "не удалось открыть микрофон (код " + rc + ")");
+                    ? L.T("микрофон не найден (код ", "microphone not found (code ") + rc + ")"
+                    : L.T("не удалось открыть микрофон (код ", "could not open the microphone (code ") + rc + ")");
             }
 
             pcm = new MemoryStream();
@@ -275,7 +275,7 @@ namespace VoiceDictate
 
         private static void Check(int rc, string what)
         {
-            if (rc != MMSYSERR_NOERROR) throw new InvalidOperationException(what + ": код " + rc);
+            if (rc != MMSYSERR_NOERROR) throw new InvalidOperationException(what + L.T(": код ", ": code ") + rc);
         }
 
         public void Dispose()

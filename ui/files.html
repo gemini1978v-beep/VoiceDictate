@@ -292,11 +292,11 @@
 <div class="app" id="app">
   <header class="titlebar" data-drag>
     <div class="lights">
-      <button class="light red" id="closeBtn" title="Закрыть"><svg viewBox="0 0 8 8"><path d="M1.5 1.5l5 5M6.5 1.5l-5 5" stroke="#4d0000" stroke-width="1.3"/></svg></button>
-      <button class="light yellow" data-cmd="minimize" title="Свернуть"><svg viewBox="0 0 8 8"><path d="M1.2 4h5.6" stroke="#5a3a00" stroke-width="1.3"/></svg></button>
+      <button class="light red" id="closeBtn" title="Закрыть" data-en-title="Close"><svg viewBox="0 0 8 8"><path d="M1.5 1.5l5 5M6.5 1.5l-5 5" stroke="#4d0000" stroke-width="1.3"/></svg></button>
+      <button class="light yellow" data-cmd="minimize" title="Свернуть" data-en-title="Minimize"><svg viewBox="0 0 8 8"><path d="M1.2 4h5.6" stroke="#5a3a00" stroke-width="1.3"/></svg></button>
       <button class="light green" disabled></button>
     </div>
-    <div class="tb-title"><b>Распознать файл</b><span>Аудио и видео → текст</span></div>
+    <div class="tb-title"><b data-en="Transcribe file">Распознать файл</b><span data-en="Audio and video → text">Аудио и видео → текст</span></div>
   </header>
 
   <div class="content" id="content">
@@ -305,16 +305,16 @@
     <section class="view" id="vPick" data-drag>
       <div class="drop" id="drop">
         <div class="drop-ic"><svg><use href="#i-wave"/></svg></div>
-        <b>Перетащите аудио или видео сюда</b>
-        <div class="or">или</div>
-        <button class="btn primary" id="pickBtn">Выбрать файл</button>
-        <small>MP3 · WAV · M4A · FLAC · OGG · OPUS · WMA · AAC<br>MP4 · MKV · AVI · MOV · WEBM и другие</small>
+        <b data-en="Drop audio or video here">Перетащите аудио или видео сюда</b>
+        <div class="or" data-en="or">или</div>
+        <button class="btn primary" id="pickBtn" data-en="Choose file">Выбрать файл</button>
+        <small data-en="MP3 · WAV · M4A · FLAC · OGG · OPUS · WMA · AAC&lt;br&gt;MP4 · MKV · AVI · MOV · WEBM and more">MP3 · WAV · M4A · FLAC · OGG · OPUS · WMA · AAC<br>MP4 · MKV · AVI · MOV · WEBM и другие</small>
       </div>
       <div class="card info">
-        <div class="r"><span>Модель: <span class="val" id="modelName1">—</span><small>меняется в настройках главного окна</small></span><button class="btn" data-cmd="settings">Изменить</button></div>
+        <div class="r"><span data-en="Model: &lt;span class=&quot;val&quot; id=&quot;modelName1&quot;&gt;—&lt;/span&gt;&lt;small&gt;change it in the main window settings&lt;/small&gt;">Модель: <span class="val" id="modelName1">—</span><small>меняется в настройках главного окна</small></span><button class="btn" data-cmd="settings" data-en="Change">Изменить</button></div>
         <div class="r" id="ffRow">
           <span id="ffText">ffmpeg</span>
-          <button class="btn" id="ffBtn1">Скачать</button>
+          <button class="btn" id="ffBtn1" data-en="Download">Скачать</button>
         </div>
       </div>
     </section>
@@ -324,29 +324,29 @@
       <div class="card file">
         <div class="file-ic" id="fileIc"><svg><use href="#i-wave"/></svg></div>
         <div class="file-txt"><b id="fileName">file.mp3</b><span id="fileMeta">MP3 · 12 МБ</span></div>
-        <button class="x" data-cmd="clearFile" title="Убрать файл"><svg viewBox="0 0 14 14"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+        <button class="x" data-cmd="clearFile" title="Убрать файл" data-en-title="Remove file"><svg viewBox="0 0 14 14"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
       </div>
       <div class="card opts">
         <div class="opt">
           <label class="switch"><input type="checkbox" id="srt"><i></i></label>
-          <label class="lbl" for="srt">Ещё и субтитры .srt<small>С таймкодами — удобно для видео</small></label>
+          <label class="lbl" for="srt" data-en="Also .srt subtitles&lt;small&gt;With timestamps — handy for video&lt;/small&gt;">Ещё и субтитры .srt<small>С таймкодами — удобно для видео</small></label>
         </div>
         <div class="opt">
-          <span class="lbl">Модель<small id="langLine">язык: ru</small></span>
+          <span class="lbl" data-en="Model&lt;small id=&quot;langLine&quot;&gt;language: ru&lt;/small&gt;">Модель<small id="langLine">язык: ru</small></span>
           <span class="val" id="modelName2">small</span>
-          <button class="btn" data-cmd="settings">Изменить</button>
+          <button class="btn" data-cmd="settings" data-en="Change">Изменить</button>
         </div>
       </div>
       <div class="notice" id="ffNotice">
-        <b>Нужен ffmpeg</b>
-        <p>Для этого формата программе нужен бесплатный конвертер ffmpeg (<span id="ffSize">~100</span> МБ, скачивается один раз). Он понимает любое аудио и видео.</p>
+        <b data-en="ffmpeg is required">Нужен ffmpeg</b>
+        <p data-en="This format needs the free ffmpeg converter (&lt;span id=&quot;ffSize&quot;&gt;~100&lt;/span&gt; MB, downloaded once). It reads any audio and video.">Для этого формата программе нужен бесплатный конвертер ffmpeg (<span id="ffSize">~100</span> МБ, скачивается один раз). Он понимает любое аудио и видео.</p>
         <button class="btn primary" id="ffBtn2">Скачать ffmpeg</button>
         <div class="progress ff-prog" id="ffProg"><i></i></div>
       </div>
-      <div class="notice" id="modelNotice"><b>Модель Whisper не скачана</b><p>Скачайте её в настройках главного окна, это нужно один раз.</p><button class="btn primary" data-cmd="settings">Открыть настройки</button></div>
+      <div class="notice" id="modelNotice"><b data-en="Whisper model is not downloaded">Модель Whisper не скачана</b><p data-en="Download it in the main window settings, it is needed once.">Скачайте её в настройках главного окна, это нужно один раз.</p><button class="btn primary" data-cmd="settings" data-en="Open settings">Открыть настройки</button></div>
       <div class="spacer"></div>
-      <button class="btn primary big" id="startBtn"><svg><use href="#i-mic"/></svg>Распознать</button>
-      <div class="hint">Текст сохранится в .txt рядом с исходным файлом</div>
+      <button class="btn primary big" id="startBtn"><svg><use href="#i-mic"/></svg><span data-en="Transcribe">Распознать</span></button>
+      <div class="hint" data-en="The text is saved as .txt next to the source file">Текст сохранится в .txt рядом с исходным файлом</div>
     </section>
 
     <!-- ============================================ 3. идёт работа -->
@@ -360,8 +360,8 @@
         <div class="pct" id="pct">0%</div>
         <h2 id="workTitle">Идёт распознавание…</h2>
         <div class="fname" id="workFile"></div>
-        <div class="times"><span>Прошло <b id="tElapsed">0:00</b></span><span id="tLeftWrap">Осталось ≈ <b id="tLeft">—</b></span></div>
-        <button class="btn" data-cmd="cancel">Отменить</button>
+        <div class="times"><span data-en="Elapsed &lt;b id=&quot;tElapsed&quot;&gt;0:00&lt;/b&gt;">Прошло <b id="tElapsed">0:00</b></span><span id="tLeftWrap" data-en="Left ≈ &lt;b id=&quot;tLeft&quot;&gt;—&lt;/b&gt;">Осталось ≈ <b id="tLeft">—</b></span></div>
+        <button class="btn" data-cmd="cancel" data-en="Cancel">Отменить</button>
       </div>
     </section>
 
@@ -369,42 +369,42 @@
     <section class="view" id="vDone">
       <div class="done-head">
         <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
-        <div><b>Готово</b><span id="doneMeta"></span></div>
+        <div><b data-en="Done">Готово</b><span id="doneMeta"></span></div>
       </div>
-      <div class="card saved" id="savedCard" title="Открыть файл">
+      <div class="card saved" id="savedCard" title="Открыть файл" data-en-title="Open file">
         <div class="file-ic"><svg><use href="#i-doc"/></svg></div>
         <div class="file-txt"><b id="txtName">file.txt</b><span id="txtDir"></span></div>
-        <span class="open">Открыть</span>
+        <span class="open" data-en="Open">Открыть</span>
       </div>
       <div class="card preview"><textarea id="resultText" readonly></textarea></div>
       <div class="actions">
-        <button class="btn" data-cmd="folder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>В папке</button>
-        <button class="btn" id="copyBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><span>Копировать</span></button>
+        <button class="btn" data-cmd="folder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span data-en="In folder">В папке</span></button>
+        <button class="btn" id="copyBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><span data-en="Copy">Копировать</span></button>
       </div>
-      <div class="srt-line" id="srtLine">Субтитры: <a id="srtLink"></a></div>
-      <button class="btn ghost again" data-cmd="again">Распознать другой файл</button>
+      <div class="srt-line" id="srtLine"><span data-en="Subtitles:">Субтитры:</span> <a id="srtLink"></a></div>
+      <button class="btn ghost again" data-cmd="again" data-en="Transcribe another file">Распознать другой файл</button>
     </section>
 
     <!-- ============================================ 5. ошибка -->
     <section class="view" id="vError">
       <div class="done-head">
         <div class="badge err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 7v6.5M12 17.2v.3"/></svg></div>
-        <div><b>Не получилось</b><span id="errFile"></span></div>
+        <div><b data-en="Something went wrong">Не получилось</b><span id="errFile"></span></div>
       </div>
       <div class="card err-text" id="errText"></div>
       <div class="err-details" id="errDetails"></div>
       <div class="spacer"></div>
       <div class="actions">
-        <button class="btn" data-cmd="clearFile">Другой файл</button>
-        <button class="btn primary" id="retryBtn">Попробовать снова</button>
+        <button class="btn" data-cmd="clearFile" data-en="Another file">Другой файл</button>
+        <button class="btn primary" id="retryBtn" data-en="Try again">Попробовать снова</button>
       </div>
     </section>
 
-    <div class="dropover" id="dropover"><div>Отпустите файл</div></div>
+    <div class="dropover" id="dropover"><div data-en="Drop the file">Отпустите файл</div></div>
     <div class="confirm" id="confirm">
-      <b>Распознавание ещё идёт</b>
-      <p>Остановить его и закрыть окно?</p>
-      <div class="row"><button class="btn" id="keepBtn">Продолжить</button><button class="btn danger" id="stopCloseBtn">Остановить и закрыть</button></div>
+      <b data-en="Transcription is still running">Распознавание ещё идёт</b>
+      <p data-en="Stop it and close the window?">Остановить его и закрыть окно?</p>
+      <div class="row"><button class="btn" id="keepBtn" data-en="Continue">Продолжить</button><button class="btn danger" id="stopCloseBtn" data-en="Stop and close">Остановить и закрыть</button></div>
     </div>
   </div>
 </div>
@@ -419,11 +419,29 @@
   var CIRC = 2 * Math.PI * 96;
   $('ringBar').style.strokeDasharray = CIRC;
 
+  var lang = document.documentElement.getAttribute('data-lang') === 'en' ? 'en' : 'ru';
+  function T(ru, en) { return lang === 'en' ? en : ru; }
+  function applyLang(l) {
+    lang = l === 'en' ? 'en' : 'ru';
+    document.documentElement.setAttribute('data-lang', lang);
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-en]').forEach(function (el) {
+      if (el.getAttribute('data-ru') === null) el.setAttribute('data-ru', el.innerHTML);
+      el.innerHTML = lang === 'en' ? el.getAttribute('data-en') : el.getAttribute('data-ru');
+    });
+    document.querySelectorAll('[data-en-title]').forEach(function (el) {
+      if (el.getAttribute('data-ru-title') === null) el.setAttribute('data-ru-title', el.getAttribute('title') || '');
+      el.setAttribute('title', lang === 'en' ? el.getAttribute('data-en-title') : el.getAttribute('data-ru-title'));
+    });
+    document.title = T('Распознать файл', 'Transcribe file');
+  }
+  applyLang(lang);
+
   function send(cmd, arg) {
     var m = arg === undefined ? cmd : cmd + '|' + arg;
     if (host) host.postMessage(m); else Demo.cmd(cmd, arg);
   }
-  function onMessage(d) { if (d && d.type === 'state') { S = d; render(); } }
+  function onMessage(d) { if (d && d.type === 'state') { S = d; if (d.ui && d.ui !== lang) applyLang(d.ui); render(); } }
   if (host) host.addEventListener('message', function (e) { onMessage(e.data); });
 
   // ------------------------------------------------------------ кнопки
@@ -437,8 +455,8 @@
   $('srtLink').onclick = function () { send('openSrt'); };
   $('copyBtn').onclick = function () {
     send('copy');
-    var s = this.querySelector('span'); s.textContent = 'Скопировано ✓';
-    setTimeout(function () { s.textContent = 'Копировать'; }, 1400);
+    var s = this.querySelector('span'); s.textContent = T('Скопировано ✓', 'Copied ✓');
+    setTimeout(function () { s.textContent = T('Копировать', 'Copy'); }, 1400);
   };
   $('closeBtn').onclick = function () {
     if (S && (S.stage === 'prep' || S.stage === 'run')) $('confirm').classList.add('show');
@@ -477,7 +495,7 @@
 
   // ------------------------------------------------------------ отрисовка
   function mmss(s) { s = Math.max(0, Math.round(s || 0)); var h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ':' + ('0' + m).slice(-2) : m) + ':' + ('0' + x).slice(-2); }
-  function mb(v) { return (v < 10 ? v.toFixed(1) : Math.round(v)).toString().replace('.', ',') + ' МБ'; }
+  function mb(v) { return (v < 10 ? v.toFixed(1) : Math.round(v)).toString().replace('.', ',') + T(' МБ', ' MB'); }
   function show(id) {
     if (curView === id) return;
     ['vPick', 'vReady', 'vWork', 'vDone', 'vError'].forEach(function (v) { $(v).classList.toggle('show', v === id); });
@@ -506,28 +524,28 @@
     // модель и ffmpeg
     $('modelName1').textContent = S.model || '—';
     $('modelName2').textContent = S.model || '—';
-    $('langLine').textContent = 'язык: ' + (S.lang || 'ru');
+    $('langLine').textContent = T('язык: ', 'language: ') + (S.lang || 'ru');
     $('ffSize').textContent = '~' + S.ffSize;
     var ffBtn1 = $('ffBtn1');
     if (S.ffmpeg) {
-      $('ffText').innerHTML = 'ffmpeg: <span class="ok-mark">установлен ✓</span><small>читает любое аудио и видео</small>';
+      $('ffText').innerHTML = T('ffmpeg: <span class="ok-mark">установлен ✓</span><small>читает любое аудио и видео</small>', 'ffmpeg: <span class="ok-mark">installed ✓</span><small>reads any audio and video</small>');
       ffBtn1.style.display = 'none';
     } else {
-      $('ffText').innerHTML = 'ffmpeg не установлен<small>нужен для M4A, AAC, OPUS, WMA и видео</small>';
+      $('ffText').innerHTML = T('ffmpeg не установлен<small>нужен для M4A, AAC, OPUS, WMA и видео</small>', 'ffmpeg is not installed<small>needed for M4A, AAC, OPUS, WMA and video</small>');
       ffBtn1.style.display = '';
       ffBtn1.disabled = S.ffDownloading;
-      ffBtn1.textContent = S.ffDownloading ? (S.ffFrac >= 0 ? Math.round(S.ffFrac * 100) + '%' : 'Скачиваю…') : 'Скачать ~' + S.ffSize + ' МБ';
+      ffBtn1.textContent = S.ffDownloading ? (S.ffFrac >= 0 ? Math.round(S.ffFrac * 100) + '%' : T('Скачиваю…', 'Downloading…')) : T('Скачать ~', 'Download ~') + S.ffSize + T(' МБ', ' MB');
     }
 
     // файл выбран
     if (f) {
       $('fileName').textContent = f.name;
       $('fileName').title = f.name;
-      $('fileMeta').textContent = f.ext + ' · ' + mb(f.mb) + (f.video ? ' · видео' : '');
+      $('fileMeta').textContent = f.ext + ' · ' + mb(f.mb) + (f.video ? T(' · видео', ' · video') : '');
       $('fileIc').innerHTML = '<svg><use href="#' + (f.video ? 'i-film' : 'i-wave') + '"/></svg>';
       $('ffNotice').style.display = f.needFf ? '' : 'none';
       $('ffBtn2').disabled = S.ffDownloading;
-      $('ffBtn2').textContent = S.ffDownloading ? 'Скачиваю…' : 'Скачать ffmpeg';
+      $('ffBtn2').textContent = S.ffDownloading ? T('Скачиваю…', 'Downloading…') : T('Скачать ffmpeg', 'Download ffmpeg');
       var fp = $('ffProg');
       fp.style.display = S.ffDownloading ? '' : 'none';
       fp.classList.toggle('indet', S.ffFrac < 0);
@@ -548,15 +566,15 @@
       var shown = st === 'prep' ? 0 : Math.max(0, p);
       $('ringBar').style.strokeDashoffset = indet ? CIRC * 0.75 : CIRC * (1 - shown);
       $('pct').textContent = st === 'prep' ? (p >= 0 ? Math.round(p * 100) + '%' : '…') : Math.round(shown * 100) + '%';
-      $('workTitle').textContent = st === 'prep' ? 'Готовлю звук…' : 'Идёт распознавание…';
+      $('workTitle').textContent = st === 'prep' ? T('Готовлю звук…', 'Preparing audio…') : T('Идёт распознавание…', 'Transcribing…');
       tickTimes();
     }
 
     // готово
     if (S.result) {
-      var r = S.result, parts = ['за ' + mmss(r.seconds)];
-      if (r.audioSeconds > 0) parts.push(mmss(r.audioSeconds) + ' записи');
-      parts.push(r.words + ' ' + plural(r.words, 'слово', 'слова', 'слов'));
+      var r = S.result, parts = [T('за ', 'in ') + mmss(r.seconds)];
+      if (r.audioSeconds > 0) parts.push(mmss(r.audioSeconds) + T(' записи', ' of audio'));
+      parts.push(r.words + ' ' + (lang === 'en' ? (r.words === 1 ? 'word' : 'words') : plural(r.words, 'слово', 'слова', 'слов')));
       $('doneMeta').textContent = parts.join(' · ') + ' · ' + r.device;
       $('txtName').textContent = r.txtName;
       $('txtDir').textContent = r.txtDir;
@@ -590,7 +608,7 @@
     init: function () {
       document.body.classList.add('demo');
       var q = new URLSearchParams(location.search);
-      this.st = { type: 'state', theme: q.get('dark') ? 'dark' : 'light', stage: 'idle', progress: -1, elapsed: 0, srt: false,
+      this.st = { type: 'state', ui: q.get('lang') === 'en' ? 'en' : 'ru', theme: q.get('dark') ? 'dark' : 'light', stage: 'idle', progress: -1, elapsed: 0, srt: false,
         model: 'small, 190 МБ', modelOk: true, lang: 'ru', ffmpeg: !q.get('noff'), ffDownloading: false, ffFrac: -1, ffMb: 0, ffSize: 100,
         error: null, details: null, file: null, result: null };
       if (q.get('file') || q.get('stage')) this.st.file = { name: 'Лекция по истории — часть 2.mp4', ext: 'MP4', mb: 148.3, video: true, needFf: !!q.get('noff') };
