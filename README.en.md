@@ -1,8 +1,8 @@
-# VoiceDictate — voice typing for Windows 10 and 11
+# VoiceDictate — voice typing and translator for Windows 10 and 11
 
 [Русский](README.md) · **English**
 
-**Version 1.1** — [download](https://github.com/gemini1978v-beep/VoiceDictate/releases/latest) · [what's new](https://github.com/gemini1978v-beep/VoiceDictate/releases/tag/v1.1) · [website](https://gemini1978v-beep.github.io/VoiceDictate/)
+**Version 1.2** — [download](https://github.com/gemini1978v-beep/VoiceDictate/releases/latest) · [what's new](https://github.com/gemini1978v-beep/VoiceDictate/releases/tag/v1.2) · [website](https://gemini1978v-beep.github.io/VoiceDictate/)
 
 Press **F3**, say a phrase, press **F3** again, and the text is pasted wherever your cursor is:
 a chat, Notepad, a browser, Word, a messenger. Handles punctuation, works great with English,
@@ -18,6 +18,9 @@ Russian and many other languages.
 - **Three ways to capture audio**: direct, through the built-in web engine, or through a tab
   in your regular browser. The last one helps when a corporate antivirus (e.g. Kaspersky)
   blocks microphone access for programs.
+- **Translator:** speak one language — a translation into another is pasted. The “Translate to”
+  button and language lists are right on the main screen. Whisper translates into English by itself
+  (free on your computer); 35 other languages are translated by a cheap OpenRouter model (~$0.0001 per phrase).
 - **Transcribe audio and video files** to `.txt` text and `.srt` subtitles.
 - English and Russian interface (RU/EN switch on the main screen); recognizes English,
   Russian and other languages.
@@ -28,18 +31,17 @@ Windows voice typing (Win+H) is not needed, so everything works on **Windows 10*
 ## Screenshots
 
 <p>
-  <img src="docs/screenshots/en/main-light.png" width="260" alt="Main window, light theme">
-  <img src="docs/screenshots/en/main-dark.png" width="260" alt="Main window, dark theme">
+  <img src="docs/screenshots/en/main-dark.png" width="260" alt="Main window: speech language, Translate to button, target language">
+  <img src="docs/screenshots/main-dark.png" width="260" alt="Main window in Russian">
 </p>
 
-Settings: audio capture method, cloud recognition with OpenRouter and price per hour, local recognition with NVIDIA acceleration.
+Settings show only the selected mode: on your computer (Whisper model, NVIDIA GPU)
+or in the OpenRouter cloud (key, model with price per hour, balance).
 
 <p>
-  <img src="docs/screenshots/en/settings-mic.png" width="260" alt="Settings: hotkey, model, microphone, audio capture">
-  <img src="docs/screenshots/en/settings-openrouter.png" width="260" alt="Settings: OpenRouter, key and model with price">
-  <img src="docs/screenshots/en/settings-local.png" width="260" alt="Settings: local recognition and NVIDIA GPU">
+  <img src="docs/screenshots/en/settings-local.png" width="260" alt="Settings: local recognition, language and translation">
+  <img src="docs/screenshots/en/settings-openrouter.png" width="260" alt="Settings: OpenRouter key, model with price, balance">
 </p>
-
 
 ## Quick start
 
@@ -217,6 +219,9 @@ try large-v3-turbo.
   In `settings.ini`: `mic_source = direct / web / browser`.
 - **Speech language** — the language you speak: English, Russian, Ukrainian and others,
   or “Auto-detect”. In `settings.ini`: `language = en / ru / auto…`.
+- **Translate to** — translate the recognized text into the selected language (same as the button on the
+  main screen). Whisper translates into English; other languages use an OpenRouter model and need a key.
+  In `settings.ini`: `translate = yes / no`, `translate_to`, `translate_model` (default `openai/gpt-4o-mini`).
 - **Recognition** — “On this computer (Whisper)”, free and offline, or “OpenRouter (cloud)”:
   the recording is sent to a cloud model via [OpenRouter](https://openrouter.ai) and paid from
   your OpenRouter balance per second of audio. An API key is required (the “Get a key” button).
