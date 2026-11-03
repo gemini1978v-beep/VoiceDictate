@@ -26,19 +26,18 @@ Windows voice typing (Win+H) is not needed, so everything works on **Windows 10*
 ## Screenshots
 
 <p>
-  <img src="docs/screenshots/main-light.png" width="260" alt="Main window, light theme">
-  <img src="docs/screenshots/main-dark.png" width="260" alt="Main window, dark theme">
+  <img src="docs/screenshots/en/main-light.png" width="260" alt="Main window, light theme">
+  <img src="docs/screenshots/en/main-dark.png" width="260" alt="Main window, dark theme">
 </p>
 
 Settings: audio capture method, cloud recognition with OpenRouter and price per hour, local recognition with NVIDIA acceleration.
 
 <p>
-  <img src="docs/screenshots/settings-mic.png" width="260" alt="Settings: hotkey, model, microphone, audio capture">
-  <img src="docs/screenshots/settings-openrouter.png" width="260" alt="Settings: OpenRouter, key and model with price">
-  <img src="docs/screenshots/settings-local.png" width="260" alt="Settings: local recognition and NVIDIA GPU">
+  <img src="docs/screenshots/en/settings-mic.png" width="260" alt="Settings: hotkey, model, microphone, audio capture">
+  <img src="docs/screenshots/en/settings-openrouter.png" width="260" alt="Settings: OpenRouter, key and model with price">
+  <img src="docs/screenshots/en/settings-local.png" width="260" alt="Settings: local recognition and NVIDIA GPU">
 </p>
 
-The screenshots show the Russian interface; switch to English with the **RU/EN** button.
 
 ## Quick start
 

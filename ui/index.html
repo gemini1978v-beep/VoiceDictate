@@ -1027,7 +1027,7 @@
   });
 
   var delay = $('delay');
-  function fmtDelay(v) { return (Math.round(v * 100) / 100).toFixed(2).replace('.', ','); }
+  function fmtDelay(v) { return (Math.round(v * 100) / 100).toFixed(2).replace('.', lang === 'en' ? '.' : ','); }
   function parseDelay() { var v = parseFloat(delay.value.replace(',', '.')); return isNaN(v) ? null : Math.max(0, Math.min(10, v)); }
   function flushDelay() {
     var v = parseDelay();
