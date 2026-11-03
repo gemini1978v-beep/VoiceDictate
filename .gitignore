@@ -10,3 +10,6 @@ models/
 whisper-cuda/
 ffmpeg/
 *.bin
+
+# черновики статей
+habr/
