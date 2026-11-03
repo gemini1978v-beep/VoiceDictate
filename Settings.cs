@@ -24,6 +24,9 @@ namespace VoiceDictate
         public string UiLang;                 // ui_lang = ru / en — язык окна; по умолчанию как у Windows
         public string Language;               // язык речи; по умолчанию ru для русского окна, иначе auto
         public string Prompt = DefaultPrompt;
+        public bool Translate = false;        // translate = yes — переводить распознанный текст
+        public string TranslateTo;            // на какой язык; по умолчанию «другой» из ru/en
+        public string TranslateModel = OpenRouter.DefaultTranslateModel;   // для языков кроме английского
 
         /// <summary>
         /// Подсказка для Whisper. Стандартная русская мешает распознавать другие языки,
@@ -96,6 +99,15 @@ namespace VoiceDictate
                         case "ui_lang":
                             s.UiLang = val.Trim().ToLowerInvariant();
                             break;
+                        case "translate":
+                            s.Translate = ParseBool(val);
+                            break;
+                        case "translate_to":
+                            if (val.Length > 0) s.TranslateTo = val.Trim().ToLowerInvariant();
+                            break;
+                        case "translate_model":
+                            if (val.Length > 0) s.TranslateModel = val;
+                            break;
                         case "language":
                             if (val.Length > 0) s.Language = val;
                             break;
@@ -150,6 +162,7 @@ namespace VoiceDictate
         {
             if (UiLang != "ru" && UiLang != "en") UiLang = L.SystemDefault();
             if (string.IsNullOrEmpty(Language)) Language = UiLang == "ru" ? "ru" : "auto";
+            if (string.IsNullOrEmpty(TranslateTo)) TranslateTo = Language == "en" ? "ru" : "en";
             return this;
         }
 
@@ -177,6 +190,11 @@ namespace VoiceDictate
             sb.AppendLine("mic_source = " + MicSource);
             sb.AppendLine("; Язык речи: ru, en, uk… или auto");
             sb.AppendLine("language = " + Language);
+            sb.AppendLine("; Переводить распознанный текст (yes / no) и на какой язык (en, ru, de…)");
+            sb.AppendLine("translate = " + (Translate ? "yes" : "no"));
+            sb.AppendLine("translate_to = " + TranslateTo);
+            sb.AppendLine("; Модель OpenRouter для перевода на языки кроме английского (на английский переводит сам Whisper)");
+            sb.AppendLine("translate_model = " + TranslateModel);
             sb.AppendLine("; Подсказка для Whisper: пример текста в нужном стиле (помогает с пунктуацией)");
             sb.AppendLine("prompt = " + Prompt);
             sb.AppendLine("; Распознавать на видеокарте NVIDIA, если скачано ускорение (папка whisper-cuda) (yes / no)");

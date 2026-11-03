@@ -62,17 +62,92 @@ namespace VoiceDictate
             return L.T("моделью ", "with model ") + (m != null ? m.File : "?");
         }
 
+        /// <summary>
+        /// Распознать и, если включено, перевести. На английский переводит сам Whisper (--translate на компьютере,
+        /// language=en в облаке). На другие языки — вторым шагом, текстовой моделью OpenRouter.
+        /// </summary>
         private async Task<WhisperEngine.Result> TranscribeAsync(string wav)
         {
+            string src = settings.Language;
+            string dst = settings.TranslateTo;
+            bool translate = settings.Translate && !string.IsNullOrEmpty(dst) && dst != src;
+            bool toEnglish = translate && dst == "en";
+
+            WhisperEngine.Result res;
             if (!settings.Cloud)
             {
                 var model = SelectedModel();
-                return await WhisperEngine.TranscribeAsync(wav, model.FullPath, settings.Language, settings.EffectivePrompt);
+                // русская подсказка тянет Whisper писать по-русски — для перевода на английский берём английскую
+                string prompt = toEnglish && settings.Prompt == Settings.DefaultPrompt ? Settings.DefaultPromptEn : settings.EffectivePrompt;
+                res = await WhisperEngine.TranscribeAsync(wav, model.FullPath, src, prompt, toEnglish);
             }
-            WhisperEngine.Result res = await OpenRouter.TranscribeAsync(
-                wav, settings.OpenRouterKey, settings.OpenRouterModel, OpenRouterModelName(), settings.Language);
-            if (res.Error == null) RefreshBalance(false);   // баланс поменялся
+            else
+            {
+                res = await OpenRouter.TranscribeAsync(
+                    wav, settings.OpenRouterKey, settings.OpenRouterModel, OpenRouterModelName(), toEnglish ? "en" : src);
+                if (res.Error == null) RefreshBalance(false);   // баланс поменялся
+            }
+            if (toEnglish && res.Error == null) res.Device += L.T(", перевод на English", ", translated to English");
+            if (!translate || toEnglish || res.Error != null || res.Text.Length == 0) return res;
+
+            // перевод на другие языки
+            string name = L.LangName(dst, false);
+            if (string.IsNullOrEmpty(settings.OpenRouterKey))
+            {
+                Log(L.T("Для перевода на ", "Translating to ") + name +
+                    L.T(" нужен ключ OpenRouter (Настройки → Распознавание). На английский Whisper переводит сам. Вставляю текст без перевода.",
+                        " needs an OpenRouter key (Settings → Recognition). Whisper translates to English by itself. Pasting the text untranslated."));
+                return res;
+            }
+            SetStatus(L.T("Перевожу на ", "Translating to ") + name + "…", ColorAmber);
+            OpenRouter.TranslateResult t = await OpenRouter.TranslateAsync(
+                res.Text, L.LangName(dst, true), settings.OpenRouterKey, settings.TranslateModel);
+            if (t.Error != null || string.IsNullOrEmpty(t.Text))
+            {
+                Log(L.T("Перевод не удался: ", "Translation failed: ") + (t.Error ?? L.T("пустой ответ", "empty response")) +
+                    L.T(". Вставляю текст без перевода.", ". Pasting the text untranslated."));
+                return res;
+            }
+            Log(L.T("Распознано: ", "Recognized: ") + res.Text);
+            res.Text = t.Text;
+            res.Device += L.T(", перевод на ", ", translated to ") + name +
+                          (t.Cost.HasValue ? " " + OpenRouter.FormatUsd(t.Cost.Value) : "");
+            RefreshBalance(false);
             return res;
+        }
+
+        /// <summary>Языки для списков на странице: код и название.</summary>
+        private static string LangsJson()
+        {
+            var sb = new System.Text.StringBuilder("[");
+            foreach (string[] l in L.SpeechLangs)
+            {
+                if (sb.Length > 1) sb.Append(',');
+                sb.Append(new Js().S("c", l[0]).S("n", l[1]).ToString());
+            }
+            return sb.Append(']').ToString();
+        }
+
+        private void SetTranslate(bool on)
+        {
+            if (settings.Translate == on) return;
+            settings.Translate = on;
+            SaveSettings();
+            Log(on ? L.T("Перевод включён: ", "Translation on: ") + L.LangName(settings.Language, false) + " → " +
+                     L.LangName(settings.TranslateTo, false) + "."
+                   : L.T("Перевод выключен.", "Translation off."));
+        }
+
+        private void SetTranslateTo(string code)
+        {
+            if (string.IsNullOrEmpty(code) || code.Length > 5) return;
+            settings.TranslateTo = code;
+            settings.Translate = true;   // выбрали язык — значит, хотят переводить
+            SaveSettings();
+            Log(L.T("Перевод: ", "Translation: ") + L.LangName(settings.Language, false) + " → " + L.LangName(code, false) +
+                (code != "en" && string.IsNullOrEmpty(settings.OpenRouterKey)
+                    ? L.T(". Для этого языка нужен ключ OpenRouter.", ". This language needs an OpenRouter key.")
+                    : "."));
         }
 
         private int OpenRouterModelIndex()

@@ -208,12 +208,14 @@ namespace VoiceDictate
         }
 
         /// <summary>Распознать WAV-файл. Выполняется в фоне, окно не подвисает.</summary>
-        public static Task<Result> TranscribeAsync(string wavPath, string modelPath, string language, string prompt)
+        /// <summary>translate — сразу перевести на английский (умеет только Whisper и только на английский).</summary>
+        public static Task<Result> TranscribeAsync(string wavPath, string modelPath, string language, string prompt,
+            bool translate = false)
         {
-            return Task.Run(() => Transcribe(wavPath, modelPath, language, prompt));
+            return Task.Run(() => Transcribe(wavPath, modelPath, language, prompt, translate));
         }
 
-        private static Result Transcribe(string wavPath, string modelPath, string language, string prompt)
+        private static Result Transcribe(string wavPath, string modelPath, string language, string prompt, bool translate)
         {
             var res = new Result();
             var sw = Stopwatch.StartNew();
@@ -263,6 +265,7 @@ namespace VoiceDictate
                 "-otxt",
                 "-of", outBase,
             };
+            if (translate) args.Add("--translate");
             if (!string.IsNullOrWhiteSpace(prompt))
             {
                 args.Add("--prompt");

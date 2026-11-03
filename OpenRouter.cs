@@ -20,6 +20,7 @@ namespace VoiceDictate
     internal static class OpenRouter
     {
         public const string DefaultModel = "openai/whisper-large-v3-turbo";
+        public const string DefaultTranslateModel = "openai/gpt-4o-mini";
         public const string KeysUrl = "https://openrouter.ai/settings/keys";
         private const string Api = "https://openrouter.ai/api/v1/";
 
@@ -62,13 +63,8 @@ namespace VoiceDictate
             return new List<Model>
             {
                 new Model { Id = "openai/whisper-large-v3-turbo", Name = "Whisper Large V3 Turbo", PerHour = 0.012 },
-                new Model { Id = "qwen/qwen3-asr-1.7b", Name = "Qwen3 ASR 1.7B", PerHour = 0.027 },
                 new Model { Id = "openai/whisper-large-v3", Name = "Whisper Large V3", PerHour = 0.027 },
-                new Model { Id = "mistralai/voxtral-mini-3b-2507", Name = "Voxtral Mini 3B 2507", PerHour = 0.06 },
-                new Model { Id = "microsoft/mai-transcribe-2", Name = "MAI-Transcribe 2", PerHour = 0.10 },
-                new Model { Id = "mistralai/voxtral-mini-transcribe", Name = "Voxtral Mini Transcribe", PerHour = 0.18 },
-                new Model { Id = "elevenlabs/scribe-v2", Name = "Scribe v2", PerHour = 0.22 },
-                new Model { Id = "openai/gpt-transcribe", Name = "GPT Transcribe", PerHour = 0.27 },
+                new Model { Id = "openai/whisper-1", Name = "Whisper 1", PerHour = 0.36 },
             };
         }
 
@@ -83,6 +79,8 @@ namespace VoiceDictate
                 {
                     string id = Str(m, "id");
                     if (string.IsNullOrEmpty(id) || !IsSpeechToText(m)) continue;
+                    // только Whisper: проверено, что остальные модели хуже справляются с русским и не переводят
+                    if (!id.StartsWith("openai/whisper", StringComparison.OrdinalIgnoreCase)) continue;
                     string name = Str(m, "name") ?? id;
                     int colon = name.IndexOf(": ", StringComparison.Ordinal);
                     if (colon > 0) name = name.Substring(colon + 2);   // «OpenAI: Whisper…» → «Whisper…»
@@ -142,6 +140,50 @@ namespace VoiceDictate
             foreach (JsonElement e in arr.EnumerateArray())
                 if (e.ValueKind == JsonValueKind.String && e.GetString() == value) return true;
             return false;
+        }
+
+        public sealed class TranslateResult
+        {
+            public string Text;
+            public string Error;
+            public double? Cost;
+        }
+
+        /// <summary>Перевести текст на язык langName (например «German») текстовой моделью OpenRouter.</summary>
+        public static async Task<TranslateResult> TranslateAsync(string text, string langName, string key, string model)
+        {
+            var res = new TranslateResult();
+            try
+            {
+                string system = "You are a translator. Translate the user's text into " + langName +
+                                ". Keep the meaning, tone and punctuation. Output only the translation, without quotes or comments.";
+                string body = "{\"model\":" + JsonSerializer.Serialize(model) +
+                              ",\"temperature\":0,\"messages\":[{\"role\":\"system\",\"content\":" + JsonSerializer.Serialize(system) +
+                              "},{\"role\":\"user\",\"content\":" + JsonSerializer.Serialize(text) + "}]}";
+                using (HttpResponseMessage r = await Send(HttpMethod.Post, "chat/completions", key, body))
+                {
+                    string json = await r.Content.ReadAsStringAsync();
+                    if (!r.IsSuccessStatusCode)
+                    {
+                        res.Error = ErrorText(r.StatusCode, json);
+                        return res;
+                    }
+                    using (JsonDocument doc = JsonDocument.Parse(json))
+                    {
+                        JsonElement choices = doc.RootElement.GetProperty("choices");
+                        res.Text = (Str(choices[0].GetProperty("message"), "content") ?? "").Trim();
+                        JsonElement u, c;
+                        if (doc.RootElement.TryGetProperty("usage", out u) && u.ValueKind == JsonValueKind.Object &&
+                            u.TryGetProperty("cost", out c) && c.ValueKind == JsonValueKind.Number)
+                            res.Cost = c.GetDouble();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Error = Friendly(ex);
+            }
+            return res;
         }
 
         public sealed class Balance

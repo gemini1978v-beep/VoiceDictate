@@ -321,6 +321,9 @@ namespace VoiceDictate
                 .S("lang", L.Code)
                 .S("version", L.Version)
                 .S("speechLang", settings.Language)
+                .B("translate", settings.Translate)
+                .S("translateTo", settings.TranslateTo)
+                .Raw("langs", LangsJson())
                 .N("mic", cmbMic.SelectedIndex)
                 .B("gpu", chkGpu.Checked)
                 .B("cuda", WhisperEngine.CudaInstalled)
@@ -444,6 +447,16 @@ namespace VoiceDictate
                         settings.Language = arg;
                         SaveSettings();
                         Log(L.T("Язык речи: ", "Speech language: ") + arg + ".");
+                    }
+                    break;
+                case "translate":
+                    if (!busy) SetTranslate(arg == "1");
+                    break;
+                case "translateTo":
+                    if (!busy)
+                    {
+                        if (arg == "off") SetTranslate(false);
+                        else SetTranslateTo(arg);
                     }
                     break;
                 case "engine":

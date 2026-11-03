@@ -313,6 +313,32 @@
     font: 600 15px var(--font); text-align: center;
   }
   .subhint { margin-top: 6px; font-size: 12.5px; color: var(--muted-2); text-align: center; }
+  /* язык речи → перевод на главном экране */
+  .langbar { margin-top: 14px; display: flex; align-items: center; gap: 6px; max-width: 100%; }
+  .langbar select {
+    height: 30px; max-width: 118px; padding: 0 22px 0 9px;
+    border-radius: 8px; border: 1px solid var(--line-2);
+    background-color: var(--surface); color: var(--text-2);
+    font: 500 12.5px var(--font); cursor: pointer;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5 6 1.8l3 2.7M3 7.5 6 10.2l3-2.7' fill='none' stroke='%238b9099' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 7px center; background-size: 10px;
+    text-overflow: ellipsis; white-space: nowrap; overflow: hidden;
+  }
+  .langbar select:disabled { opacity: .55; cursor: default; }
+  .trbtn {
+    height: 30px; padding: 0 10px; border-radius: 8px;
+    border: 1px solid var(--line-2); background: var(--btn); color: var(--text-2);
+    font: 600 12.5px var(--font); white-space: nowrap; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px;
+    transition: background .15s, color .15s, border-color .15s, box-shadow .15s;
+  }
+  .trbtn svg { width: 14px; height: 14px; }
+  .trbtn:hover { background: var(--btn-hover); }
+  .trbtn.on { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 2px 8px rgba(47,123,245,.3); }
+  .trbtn:disabled { opacity: .55; cursor: default; }
+  .langbar .dst.off { opacity: .55; }
+  .app.has-extra .langbar { margin-top: 8px; }
   .status {
     margin-top: 16px;
     display: flex; align-items: center; gap: 8px;
@@ -579,6 +605,14 @@
 
       <div class="hint" id="hint">Нажмите <kbd class="hk">F3</kbd>, чтобы начать запись</div>
       <div class="subhint" data-en="1st press — record, 2nd — send the text">1-е нажатие — запись, 2-е — отправка текста</div>
+      <div class="langbar">
+        <select id="srcLang" title="Язык речи" data-en-title="Speech language"></select>
+        <button class="trbtn" id="trBtn" title="Переводить распознанный текст" data-en-title="Translate the recognized text">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h11l-3-3M20 17H9l3 3"/></svg>
+          <span data-en="Translate to">Перевести на</span>
+        </button>
+        <select id="dstLang" class="dst" title="На какой язык переводить" data-en-title="Translate into"></select>
+      </div>
       <div class="status" id="status"><span class="dot" id="dot"></span><span id="statusText">Ожидание</span></div>
 
       <div class="notice" id="modelNotice">
@@ -639,17 +673,12 @@
           </div>
           <div class="row">
             <label for="speechLang" data-en="Speech language">Язык речи</label>
-            <select class="select" id="speechLang">
-              <option value="ru">Русский</option>
-              <option value="en">English</option>
-              <option value="uk">Українська</option>
-              <option value="de">Deutsch</option>
-              <option value="fr">Français</option>
-              <option value="es">Español</option>
-              <option value="it">Italiano</option>
-              <option value="pl">Polski</option>
-              <option value="auto" data-en="Auto-detect">Определять сам</option>
-            </select>
+            <select class="select" id="speechLang"></select>
+          </div>
+          <div class="row">
+            <label for="trSel" data-en="Translate to">Перевести на</label>
+            <select class="select" id="trSel"></select>
+            <div class="help" data-en="Into English Whisper translates by itself (free on your computer). Other languages are translated by a cheap OpenRouter model (~$0.0001 per phrase) and need an API key.">На английский переводит сам Whisper (на компьютере бесплатно). На другие языки — дешёвая модель OpenRouter (~$0,0001 за фразу), нужен ключ API.</div>
           </div>
         </div>
 
@@ -677,7 +706,7 @@
             <div class="row wide">
               <label for="orModel" data-en="Model and price per hour of audio">Модель и цена за 1 час записи</label>
               <select class="select" id="orModel"></select>
-              <div class="help" data-en="Whisper models translate: set the speech language to English and speak Russian — you get English text. Whisper 1 and Large V3 translate best, Turbo only partly. With other models always set the language you actually speak, otherwise you get nonsense. Cheapest first in each group.">Модели Whisper умеют переводить: поставьте язык речи English и говорите по-русски — получится английский текст. Лучше всего переводят Whisper 1 и Large V3, Turbo — частично. В остальных моделях ставьте язык, на котором говорите, иначе получится бессмыслица. В каждой группе дешёвые сверху.</div>
+              <div class="help" data-en="Only Whisper models: they recognize Russian best and can translate to English. For translation Whisper 1 and Large V3 are best, Turbo is weaker. Cheapest first.">Только модели Whisper: они лучше всего понимают русский и умеют переводить на английский. Для перевода лучше Whisper 1 и Large V3, Turbo слабее. Дешёвые сверху.</div>
             </div>
             <div class="row">
               <label data-en="Balance">Баланс</label>
@@ -1008,6 +1037,10 @@
   $('micSource').onchange = function () { send('micSource', this.value); };
   $('engine').onchange = function () { send('engine', this.value); };
   $('speechLang').onchange = function () { send('speechLang', this.value); };
+  $('srcLang').onchange = function () { send('speechLang', this.value); };
+  $('trBtn').onclick = function () { if (S) send('translate', S.translate ? '0' : '1'); };
+  $('dstLang').onchange = function () { send('translateTo', this.value); };
+  $('trSel').onchange = function () { send('translateTo', this.value); };
   $('langBtn').onclick = function () { var next = lang === 'en' ? 'ru' : 'en'; applyLang(next); send('lang', next); if (S) render(); };
   $('orModel').onchange = function () { send('orModel', this.selectedIndex); };
   $('orKeySave').onclick = function () {
@@ -1089,14 +1122,32 @@
   }
 
   // ------------------------------------------------------------ отрисовка состояния
+  // список языков: [{c: код, n: название}], value = код
+  function fillLangs(sel, items, value) {
+    var sig = lang + JSON.stringify(items);
+    if (sel.getAttribute('data-sig') !== sig) {
+      sel.innerHTML = '';
+      items.forEach(function (it) {
+        var o = document.createElement('option'); o.value = it.c; o.textContent = it.n; sel.appendChild(o);
+      });
+      sel.setAttribute('data-sig', sig);
+    }
+    if (value && !sel.querySelector('option[value="' + value + '"]')) {
+      var x = document.createElement('option'); x.value = value; x.textContent = value; sel.appendChild(x);
+    }
+    if (document.activeElement !== sel && value) sel.value = value;
+  }
+
   // модели OpenRouter двумя группами: переводят на английский / только распознают
   function setModelGroups(sel, items, index) {
     var sig = lang + JSON.stringify(items);
     if (sel.getAttribute('data-sig') !== sig) {
       sel.innerHTML = '';
       var groups = {};
+      var single = items.every(function (it) { return !!it.g === !!(items[0] && items[0].g); });
       items.forEach(function (it) {
         var g = it.g ? 1 : 0;
+        if (single) { var so = document.createElement('option'); so.textContent = it.t; sel.appendChild(so); return; }
         if (!groups[g]) {
           groups[g] = document.createElement('optgroup');
           groups[g].label = g ? T('Переводят на английский (Whisper)', 'Translate to English (Whisper)')
@@ -1225,14 +1276,16 @@
     $('mic').disabled = !S.canMic;
     $('micSource').value = S.micSource === 'web' || S.micSource === 'browser' ? S.micSource : 'direct';
     $('micSource').disabled = !S.canMic;
-    if (S.speechLang) {
-      var sl = $('speechLang');
-      if (!sl.querySelector('option[value="' + S.speechLang + '"]')) {
-        var o = document.createElement('option'); o.value = S.speechLang; o.textContent = S.speechLang; sl.appendChild(o);
-      }
-      sl.value = S.speechLang;
-    }
-    $('speechLang').disabled = !S.canModel;
+    // язык речи и перевод: главный экран и настройки показывают одно и то же
+    var langs = S.langs || [];
+    var auto = { c: 'auto', n: T('Авто', 'Auto') };
+    fillLangs($('srcLang'), [auto].concat(langs), S.speechLang);
+    fillLangs($('speechLang'), [{ c: 'auto', n: T('Определять сам', 'Auto-detect') }].concat(langs), S.speechLang);
+    fillLangs($('dstLang'), langs, S.translateTo);
+    fillLangs($('trSel'), [{ c: 'off', n: T('Не переводить', 'Do not translate') }].concat(langs), S.translate ? S.translateTo : 'off');
+    $('trBtn').classList.toggle('on', !!S.translate);
+    $('dstLang').classList.toggle('off', !S.translate);
+    ['srcLang', 'speechLang', 'trBtn', 'dstLang', 'trSel'].forEach(function (id) { $(id).disabled = !S.canDictate || rec; });
 
     $('gpu').checked = S.gpu;
     var cb = $('cudaBtn');
@@ -1300,7 +1353,8 @@
         recSeconds: 0, status: 'Готов. F3 — начать запись', statusKind: 'idle',
         models: [{ t: 'small, 190 МБ — рекомендую', ok: true, mb: 190 }, { t: 'large-v3-turbo, 550 МБ — точнее', ok: false, mb: 550 },
                  { t: 'medium, 515 МБ', ok: false, mb: 515 }, { t: 'base, 60 МБ — быстрая, но хуже', ok: false, mb: 60 }],
-        model: 0, modelExists: true, mics: ['По умолчанию (как в Windows)', 'Микрофон (Realtek Audio)', 'Headset (USB Audio)'], mic: 0, micSource: 'direct', lang: 'ru', version: '1.1', speechLang: 'ru',
+        model: 0, modelExists: true, mics: ['По умолчанию (как в Windows)', 'Микрофон (Realtek Audio)', 'Headset (USB Audio)'], mic: 0, micSource: 'direct', lang: 'ru', version: '1.1', speechLang: 'ru', translate: false, translateTo: 'en',
+        langs: [{ c: 'ru', n: 'Русский' }, { c: 'en', n: 'English' }, { c: 'uk', n: 'Українська' }, { c: 'de', n: 'Deutsch' }],
         engine: 'local', orHasKey: false, orKeyMask: '', orModel: 0, orModelName: 'Whisper Large V3 Turbo',
         orModels: [{ t: 'Whisper Large V3 Turbo — $0,012/ч', g: 1 }, { t: 'Whisper Large V3 — $0,027/ч', g: 1 }, { t: 'MAI-Transcribe 2 — $0,10/ч', g: 0 }],
         orBalance: '', orBalanceNote: '', orBalanceError: false,
@@ -1356,6 +1410,8 @@
         case 'engine': s.engine = a; break;
         case 'lang': s.lang = a; break;
         case 'speechLang': s.speechLang = a; break;
+        case 'translate': s.translate = a === '1'; break;
+        case 'translateTo': if (a === 'off') s.translate = false; else { s.translateTo = a; s.translate = true; } break;
         case 'orModel': s.orModel = +a; s.orModelName = s.orModels[+a].t.split(' — ')[0]; break;
         case 'orKey': s.orHasKey = true; s.orKeyMask = a.slice(0, 11) + '…' + a.slice(-4); s.orBalance = '$4,87'; s.orBalanceNote = 'Баланс аккаунта.'; break;
         case 'orBalance': break;
