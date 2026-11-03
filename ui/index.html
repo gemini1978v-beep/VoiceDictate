@@ -489,7 +489,9 @@
   .cloud-only { display: none; }
   .app.cloud .cloud-only { display: block; }
   .app.cloud .local-only { display: none; }
-  .cloud-only > .row { border-top: 1px solid var(--divider); }
+  .cloud-only > .row, .local-only > .row, .local-only > .opt { border-top: 1px solid var(--divider); }
+  .local-only > .gpu-extra { padding-top: 0; }
+  .card-title:first-child { margin-top: 2px; }
   .row.wide { grid-template-columns: minmax(0, 1fr); row-gap: 7px; }
   .row.wide .under { grid-column: 1; }
   .row.wide .btns { margin-top: 1px; }
@@ -640,57 +642,41 @@
     <section class="screen" id="settingsScreen">
       <div class="scroll" id="scroll">
 
+        <!-- 1. Распознавание: выбор движка наверху, ниже — только настройки выбранного -->
+        <div class="card-title" data-en="Recognition">Распознавание</div>
         <div class="card">
           <div class="row">
-            <label for="hotkey" data-en="Hotkey">Горячая клавиша</label>
-            <input class="input hotkey" id="hotkey" readonly spellcheck="false">
-            <div class="help" id="hotkeyHelp">1-е нажатие — запись, 2-е — отправка. Щёлкните в поле и нажмите новое сочетание.</div>
-          </div>
-          <div class="row">
-            <label for="model" data-en="Model">Модель</label>
-            <select class="select" id="model"></select>
-            <div class="under">
-              <div class="btns">
-                <button class="btn" id="dlBtn" data-en="Download">Скачать</button>
-                <button class="btn" id="testBtn" data-en="Test">Проверить</button>
-              </div>
-              <div class="prog-wrap" id="modelProg"><div class="progress"><i></i></div><small></small></div>
-            </div>
-          </div>
-          <div class="row">
-            <label for="mic" data-en="Microphone">Микрофон</label>
-            <select class="select" id="mic"></select>
-            <div class="under"><div class="meter" title="Громкость во время записи" data-en-title="Volume while recording"><i id="meter"></i></div></div>
-          </div>
-          <div class="row">
-            <label for="micSource" data-en="Audio capture">Запись звука</label>
-            <select class="select" id="micSource">
-              <option value="direct" data-en="Direct">Напрямую</option>
-              <option value="web" data-en="Via web (window engine)">Через веб (движок окна)</option>
-              <option value="browser" data-en="Via browser (tab)">Через браузер (вкладка)</option>
-            </select>
-            <div class="help" data-en="If an antivirus (e.g. Kaspersky) blocks the microphone for programs but it works in your browser, choose “Via browser”: a tab opens, keep it open.">Если антивирус (например, Касперский) не даёт программе микрофон, а в браузере он работает, — выберите «Через браузер»: откроется вкладка, её нужно держать открытой.</div>
-          </div>
-          <div class="row">
-            <label for="speechLang" data-en="Speech language">Язык речи</label>
-            <select class="select" id="speechLang"></select>
-          </div>
-          <div class="row">
-            <label for="trSel" data-en="Translate to">Перевести на</label>
-            <select class="select" id="trSel"></select>
-            <div class="help" data-en="Into English Whisper translates by itself (free on your computer). Other languages are translated by a cheap OpenRouter model (~$0.0001 per phrase) and need an API key.">На английский переводит сам Whisper (на компьютере бесплатно). На другие языки — дешёвая модель OpenRouter (~$0,0001 за фразу), нужен ключ API.</div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="row">
-            <label for="engine" data-en="Recognition">Распознавание</label>
+            <label for="engine" data-en="Where">Где</label>
             <select class="select" id="engine">
               <option value="local" data-en="On this computer (Whisper)">На компьютере (Whisper)</option>
               <option value="openrouter" data-en="OpenRouter (cloud)">OpenRouter (облако)</option>
             </select>
-            <div class="help" data-en="“On this computer” is free and works offline. OpenRouter runs cloud models: paid from your OpenRouter balance, only for recorded seconds.">«На компьютере» — бесплатно и без интернета. OpenRouter — облачные модели: платно, с баланса OpenRouter, только за записанные секунды.</div>
+            <div class="help local-only" data-en="Free and offline: your voice never leaves the computer.">Бесплатно и без интернета: голос никуда не уходит.</div>
+            <div class="help cloud-only" data-en="Cloud models: paid from your OpenRouter balance, only for recorded seconds.">Облачные модели: платно, с баланса OpenRouter, только за записанные секунды.</div>
           </div>
+
+          <div class="local-only">
+            <div class="row">
+              <label for="model" data-en="Model">Модель</label>
+              <select class="select" id="model"></select>
+              <div class="under">
+                <div class="btns">
+                  <button class="btn" id="dlBtn" data-en="Download">Скачать</button>
+                  <button class="btn" id="testBtn" data-en="Test">Проверить</button>
+                </div>
+                <div class="prog-wrap" id="modelProg"><div class="progress"><i></i></div><small></small></div>
+              </div>
+            </div>
+            <div class="opt">
+              <label class="switch"><input type="checkbox" id="gpu"><i></i></label>
+              <label class="lbl" for="gpu" data-en="NVIDIA GPU (CUDA)&lt;small&gt;Use GPU acceleration for faster recognition.&lt;/small&gt;">Видеокарта NVIDIA (CUDA)<small>Использовать видеоускорение для более быстрой обработки.</small></label>
+            </div>
+            <div class="gpu-extra">
+              <button class="btn" id="cudaBtn">Скачать ускорение NVIDIA (~640 МБ)</button>
+              <div class="prog-wrap" id="cudaProg"><div class="progress"><i></i></div><small></small></div>
+            </div>
+          </div>
+
           <div class="cloud-only">
             <div class="row wide">
               <label for="orKey" data-en="OpenRouter API key">Ключ API OpenRouter</label>
@@ -706,6 +692,7 @@
             <div class="row wide">
               <label for="orModel" data-en="Model and price per hour of audio">Модель и цена за 1 час записи</label>
               <select class="select" id="orModel"></select>
+              <div class="under"><div class="btns"><button class="btn" id="orTestBtn" data-en="Test">Проверить</button></div></div>
               <div class="help" data-en="Only Whisper models: they recognize Russian best and can translate to English. For translation Whisper 1 and Large V3 are best, Turbo is weaker. Cheapest first.">Только модели Whisper: они лучше всего понимают русский и умеют переводить на английский. Для перевода лучше Whisper 1 и Large V3, Turbo слабее. Дешёвые сверху.</div>
             </div>
             <div class="row">
@@ -716,18 +703,48 @@
           </div>
         </div>
 
-        <div class="card local-only">
-          <div class="opt">
-            <label class="switch"><input type="checkbox" id="gpu"><i></i></label>
-            <label class="lbl" for="gpu" data-en="NVIDIA GPU (CUDA)&lt;small&gt;Use GPU acceleration for faster recognition.&lt;/small&gt;">Видеокарта NVIDIA (CUDA)<small>Использовать видеоускорение для более быстрой обработки.</small></label>
+        <!-- 2. Язык и перевод (то же, что на главном экране) -->
+        <div class="card-title" data-en="Language and translation">Язык и перевод</div>
+        <div class="card">
+          <div class="row">
+            <label for="speechLang" data-en="Speech language">Язык речи</label>
+            <select class="select" id="speechLang"></select>
           </div>
-          <div class="gpu-extra">
-            <button class="btn" id="cudaBtn">Скачать ускорение NVIDIA (~640 МБ)</button>
-            <div class="prog-wrap" id="cudaProg"><div class="progress"><i></i></div><small></small></div>
+          <div class="row">
+            <label for="trSel" data-en="Translate to">Перевести на</label>
+            <select class="select" id="trSel"></select>
+            <div class="help local-only" data-en="Into English Whisper translates by itself, free. Other languages are translated by a cheap OpenRouter model (~$0.0001 per phrase) and need an OpenRouter key.">На английский переводит сам Whisper, бесплатно. На другие языки — дешёвая модель OpenRouter (~$0,0001 за фразу), нужен ключ OpenRouter.</div>
+            <div class="help cloud-only" data-en="Into English Whisper translates by itself. Other languages are translated by a cheap OpenRouter model (~$0.0001 per phrase).">На английский переводит сам Whisper. На другие языки — дешёвая модель OpenRouter (~$0,0001 за фразу).</div>
           </div>
         </div>
 
+        <!-- 3. Микрофон -->
+        <div class="card-title" data-en="Microphone">Микрофон</div>
         <div class="card">
+          <div class="row">
+            <label for="mic" data-en="Device">Устройство</label>
+            <select class="select" id="mic"></select>
+            <div class="under"><div class="meter" title="Громкость во время записи" data-en-title="Volume while recording"><i id="meter"></i></div></div>
+          </div>
+          <div class="row">
+            <label for="micSource" data-en="Audio capture">Запись звука</label>
+            <select class="select" id="micSource">
+              <option value="direct" data-en="Direct">Напрямую</option>
+              <option value="web" data-en="Via web (window engine)">Через веб (движок окна)</option>
+              <option value="browser" data-en="Via browser (tab)">Через браузер (вкладка)</option>
+            </select>
+            <div class="help" data-en="If an antivirus (e.g. Kaspersky) blocks the microphone for programs but it works in your browser, choose “Via browser”: a tab opens, keep it open.">Если антивирус (например, Касперский) не даёт программе микрофон, а в браузере он работает, — выберите «Через браузер»: откроется вкладка, её нужно держать открытой.</div>
+          </div>
+        </div>
+
+        <!-- 4. Клавиша и вставка текста -->
+        <div class="card-title" data-en="Hotkey and pasting">Клавиша и вставка</div>
+        <div class="card">
+          <div class="row">
+            <label for="hotkey" data-en="Hotkey">Горячая клавиша</label>
+            <input class="input hotkey" id="hotkey" readonly spellcheck="false">
+            <div class="help" id="hotkeyHelp">1-е нажатие — запись, 2-е — отправка. Щёлкните в поле и нажмите новое сочетание.</div>
+          </div>
           <div class="opt">
             <label class="switch"><input type="checkbox" id="autoSend"><i></i></label>
             <label class="lbl" for="autoSend" data-en="Send recognized text to the active window right away">Сразу отправлять распознанный текст в активное окно</label>
@@ -1054,6 +1071,7 @@
   $('orBalanceBtn').onclick = function () { send('orBalance'); };
   $('dlBtn').onclick = function () { progressWhat = 'model'; progressFrac = -1; send('download'); };
   $('testBtn').onclick = function () { send('test'); };
+  $('orTestBtn').onclick = function () { send('test'); };
   $('cudaBtn').onclick = function () { progressWhat = 'cuda'; progressFrac = -1; send('cuda'); };
   ['gpu', 'autoSend', 'enter', 'type', 'topmost'].forEach(function (id) {
     $(id).onchange = function () { send(id, this.checked ? '1' : '0'); };
@@ -1271,6 +1289,7 @@
     bal.classList.toggle('err', !!S.orBalanceError);
     $('orBalanceNote').textContent = S.orBalanceNote || '';
     $('orBalanceBtn').disabled = !S.orHasKey;
+    $('orTestBtn').disabled = !S.canTest || !S.orHasKey;
 
     setOptions($('mic'), S.mics, S.mic);
     $('mic').disabled = !S.canMic;
