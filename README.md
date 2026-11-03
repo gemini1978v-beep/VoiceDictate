@@ -18,6 +18,21 @@
 
 Голосовой ввод Windows (Win+H) не нужен, поэтому всё работает и на **Windows 10**.
 
+## Как выглядит
+
+<p>
+  <img src="docs/screenshots/main-light.png" width="260" alt="Главное окно, светлая тема">
+  <img src="docs/screenshots/main-dark.png" width="260" alt="Главное окно, тёмная тема">
+</p>
+
+Настройки: способ записи звука, распознавание в облаке OpenRouter с ценой за час, распознавание на компьютере с ускорением NVIDIA.
+
+<p>
+  <img src="docs/screenshots/settings-mic.png" width="260" alt="Настройки: клавиша, модель, микрофон, запись звука">
+  <img src="docs/screenshots/settings-openrouter.png" width="260" alt="Настройки: OpenRouter, ключ и модель с ценой">
+  <img src="docs/screenshots/settings-local.png" width="260" alt="Настройки: распознавание на компьютере и видеокарта NVIDIA">
+</p>
+
 ## Быстрый старт
 
 ### Вариант 1. Готовая программа (проще)
