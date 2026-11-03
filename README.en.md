@@ -2,7 +2,7 @@
 
 [Русский](README.md) · **English**
 
-**Version 1.1** — [download](https://github.com/gemini1978v-beep/VoiceDictate/releases/latest) · [what's new](https://github.com/gemini1978v-beep/VoiceDictate/releases/tag/v1.1)
+**Version 1.1** — [download](https://github.com/gemini1978v-beep/VoiceDictate/releases/latest) · [what's new](https://github.com/gemini1978v-beep/VoiceDictate/releases/tag/v1.1) · [website](https://gemini1978v-beep.github.io/VoiceDictate/)
 
 Press **F3**, say a phrase, press **F3** again, and the text is pasted wherever your cursor is:
 a chat, Notepad, a browser, Word, a messenger. Handles punctuation, works great with English,

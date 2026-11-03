@@ -2,7 +2,7 @@
 
 **Русский** · [English](README.en.md)
 
-**Версия 1.1** — [скачать](https://github.com/gemini1978v-beep/VoiceDictate/releases/latest) · [что нового](https://github.com/gemini1978v-beep/VoiceDictate/releases/tag/v1.1)
+**Версия 1.1** — [скачать](https://github.com/gemini1978v-beep/VoiceDictate/releases/latest) · [что нового](https://github.com/gemini1978v-beep/VoiceDictate/releases/tag/v1.1) · [сайт](https://gemini1978v-beep.github.io/VoiceDictate/ru/)
 
 Нажали **F3**, сказали фразу, снова нажали **F3**, и текст сам вставился туда, где стоит курсор:
 в чат, Блокнот, браузер, Word, мессенджер. Хорошо понимает русский, расставляет знаки препинания.
