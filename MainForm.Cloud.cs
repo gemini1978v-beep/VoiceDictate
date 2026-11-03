@@ -11,8 +11,15 @@ namespace VoiceDictate
     /// </summary>
     internal sealed partial class MainForm
     {
-        private List<OpenRouter.Model> orModels = OpenRouter.FallbackModels();
+        private List<OpenRouter.Model> orModels = SortedFallback();
         private bool orModelsLoaded;
+
+        private static List<OpenRouter.Model> SortedFallback()
+        {
+            List<OpenRouter.Model> list = OpenRouter.FallbackModels();
+            OpenRouter.SortModels(list);
+            return list;
+        }
         private string orBalance = "";        // «$4,12», «проверяю…» или пусто
         private string orBalanceNote = "";
         private bool orBalanceError;
@@ -194,12 +201,18 @@ namespace VoiceDictate
         /// <summary>Часть состояния для страницы: всё про облако.</summary>
         private void AddCloudState(Js js)
         {
-            var titles = new List<string>();
-            foreach (OpenRouter.Model m in orModels) titles.Add(m.Title);
+            // модели по группам: g = 1 — переводят на английский (Whisper), 0 — только распознают
+            var models = new System.Text.StringBuilder("[");
+            foreach (OpenRouter.Model m in orModels)
+            {
+                if (models.Length > 1) models.Append(',');
+                models.Append(new Js().S("t", m.Title).N("g", m.Translates ? 1 : 0).ToString());
+            }
+            models.Append(']');
             js.S("engine", settings.Cloud ? "openrouter" : "local")
               .B("orHasKey", !string.IsNullOrEmpty(settings.OpenRouterKey))
               .S("orKeyMask", OpenRouter.Mask(settings.OpenRouterKey))
-              .Raw("orModels", Js.Arr(titles))
+              .Raw("orModels", models.ToString())
               .N("orModel", OpenRouterModelIndex())
               .S("orModelName", OpenRouterModelName())
               .S("orBalance", orBalance)

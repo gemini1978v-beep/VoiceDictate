@@ -677,7 +677,7 @@
             <div class="row wide">
               <label for="orModel" data-en="Model and price per hour of audio">Модель и цена за 1 час записи</label>
               <select class="select" id="orModel"></select>
-              <div class="help" data-en="Cheapest first. The list and prices come from OpenRouter. Whisper Large V3 Turbo and MAI-Transcribe 2 are good for dictation.">Дешёвые сверху. Список и цены — с сайта OpenRouter. Для русской диктовки хороши Whisper Large V3 Turbo и MAI-Transcribe 2.</div>
+              <div class="help" data-en="Whisper models translate: set the speech language to English and speak Russian — you get English text. Other models write in the language you speak. Cheapest first in each group; prices come from OpenRouter.">Модели Whisper умеют переводить: поставьте язык речи English и говорите по-русски — получится английский текст. Остальные пишут на том языке, на котором говорите. В каждой группе дешёвые сверху, цены — с сайта OpenRouter.</div>
             </div>
             <div class="row">
               <label data-en="Balance">Баланс</label>
@@ -1089,6 +1089,29 @@
   }
 
   // ------------------------------------------------------------ отрисовка состояния
+  // модели OpenRouter двумя группами: переводят на английский / только распознают
+  function setModelGroups(sel, items, index) {
+    var sig = lang + JSON.stringify(items);
+    if (sel.getAttribute('data-sig') !== sig) {
+      sel.innerHTML = '';
+      var groups = {};
+      items.forEach(function (it) {
+        var g = it.g ? 1 : 0;
+        if (!groups[g]) {
+          groups[g] = document.createElement('optgroup');
+          groups[g].label = g ? T('Переводят на английский (Whisper)', 'Translate to English (Whisper)')
+                              : T('Только распознавание', 'Transcription only');
+          sel.appendChild(groups[g]);
+        }
+        var o = document.createElement('option');
+        o.textContent = it.t;
+        groups[g].appendChild(o);
+      });
+      sel.setAttribute('data-sig', sig);
+    }
+    if (document.activeElement !== sel) sel.selectedIndex = index;
+  }
+
   function setOptions(sel, items, index, key) {
     var sig = JSON.stringify(items);
     if (sel.getAttribute('data-sig') !== sig) {
@@ -1190,7 +1213,7 @@
     $('orKeyHelp').textContent = S.orHasKey
       ? T('Ключ сохранён в settings.ini. Чтобы заменить, вставьте новый и нажмите «Сохранить ключ».', 'The key is saved in settings.ini. To replace it, paste a new one and click “Save key”.')
       : T('Вставьте ключ с openrouter.ai (кнопка «Где взять ключ»). Он хранится в settings.ini рядом с программой.', 'Paste a key from openrouter.ai (the “Get a key” button). It is stored in settings.ini next to the program.');
-    setOptions($('orModel'), S.orModels || [], S.orModel);
+    setModelGroups($('orModel'), S.orModels || [], S.orModel);
     $('orModel').disabled = !S.canModel;
     var bal = $('orBalance');
     bal.textContent = S.orHasKey ? (S.orBalance || '—') : T('нет ключа', 'no key');
@@ -1279,7 +1302,7 @@
                  { t: 'medium, 515 МБ', ok: false, mb: 515 }, { t: 'base, 60 МБ — быстрая, но хуже', ok: false, mb: 60 }],
         model: 0, modelExists: true, mics: ['По умолчанию (как в Windows)', 'Микрофон (Realtek Audio)', 'Headset (USB Audio)'], mic: 0, micSource: 'direct', lang: 'ru', version: '1.1', speechLang: 'ru',
         engine: 'local', orHasKey: false, orKeyMask: '', orModel: 0, orModelName: 'Whisper Large V3 Turbo',
-        orModels: ['Whisper Large V3 Turbo — $0,012/ч', 'Whisper Large V3 — $0,027/ч', 'MAI-Transcribe 2 — $0,10/ч'],
+        orModels: [{ t: 'Whisper Large V3 Turbo — $0,012/ч', g: 1 }, { t: 'Whisper Large V3 — $0,027/ч', g: 1 }, { t: 'MAI-Transcribe 2 — $0,10/ч', g: 0 }],
         orBalance: '', orBalanceNote: '', orBalanceError: false,
         gpu: true, cuda: false, cudaMb: 640, theme: 'light', autoSend: true, enter: false, delay: 0.2, typeText: true, topmost: true, text: '',
         canDictate: true, canSend: true, canTest: true, canDownload: true, canCuda: true, canModel: true, canMic: true
@@ -1333,7 +1356,7 @@
         case 'engine': s.engine = a; break;
         case 'lang': s.lang = a; break;
         case 'speechLang': s.speechLang = a; break;
-        case 'orModel': s.orModel = +a; s.orModelName = s.orModels[+a].split(' — ')[0]; break;
+        case 'orModel': s.orModel = +a; s.orModelName = s.orModels[+a].t.split(' — ')[0]; break;
         case 'orKey': s.orHasKey = true; s.orKeyMask = a.slice(0, 11) + '…' + a.slice(-4); s.orBalance = '$4,87'; s.orBalanceNote = 'Баланс аккаунта.'; break;
         case 'orBalance': break;
         case 'gpu': case 'autoSend': case 'enter': s[c] = a === '1'; break;

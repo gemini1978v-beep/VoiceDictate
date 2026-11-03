@@ -380,6 +380,18 @@ namespace VoiceDictate
             return string.Join(Environment.NewLine, all.Skip(Math.Max(0, all.Length - lines)));
         }
 
+        /// <summary>
+        /// Весь текст — одна «галлюцинация» на тишине («Продолжение следует...» и т. п.).
+        /// Для облачных моделей: у них текст одной строкой, поэтому выкидываем только если кроме фразы ничего нет.
+        /// </summary>
+        public static bool IsOnlyHallucination(string text)
+        {
+            string letters = Regex.Replace((text ?? "").ToLowerInvariant(), @"[^\p{L}\p{N} ]", " ");
+            letters = Regex.Replace(letters, @"\s+", " ").Trim();
+            if (letters.Length == 0) return true;
+            return Hallucinations.Any(h => Regex.Replace(h, @"[^\p{L}\p{N} ]", " ").Trim() == letters);
+        }
+
         /// <summary>Склеить строки, убрать пометки вроде [музыка] и фразы-«галлюцинации».</summary>
         public static string Clean(string text)
         {

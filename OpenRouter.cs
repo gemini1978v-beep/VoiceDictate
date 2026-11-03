@@ -39,6 +39,15 @@ namespace VoiceDictate
             public string Name;
             public double PerHour = -1;   // долларов за час записи; -1 — цена в токенах, заранее не посчитать
 
+            /// <summary>
+            /// Умеет переводить на английский: модели Whisper при языке речи English выдают английский текст,
+            /// даже если говорить по-русски. Остальные пишут на том языке, на котором говорят.
+            /// </summary>
+            public bool Translates
+            {
+                get { return Id.StartsWith("openai/whisper", StringComparison.OrdinalIgnoreCase); }
+            }
+
             public string Title
             {
                 get { return Name + " — " + (PerHour < 0 ? L.T("цена в токенах", "priced per token") : FormatUsd(PerHour) + L.T("/ч", "/h")); }
@@ -89,13 +98,20 @@ namespace VoiceDictate
                     list.Add(new Model { Id = id, Name = name, PerHour = perHour });
                 }
             }
+            SortModels(list);
+            return list;
+        }
+
+        /// <summary>Сначала модели с переводом, внутри групп — дешёвые сверху.</summary>
+        public static void SortModels(List<Model> list)
+        {
             list.Sort((a, b) =>
             {
+                if (a.Translates != b.Translates) return a.Translates ? -1 : 1;
                 if ((a.PerHour < 0) != (b.PerHour < 0)) return a.PerHour < 0 ? 1 : -1;
                 int c = a.PerHour.CompareTo(b.PerHour);
                 return c != 0 ? c : string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase);
             });
-            return list;
         }
 
         /// <summary>
@@ -229,6 +245,7 @@ namespace VoiceDictate
                     using (JsonDocument doc = JsonDocument.Parse(text))
                     {
                         res.Text = (Str(doc.RootElement, "text") ?? "").Trim();
+                        if (WhisperEngine.IsOnlyHallucination(res.Text)) res.Text = "";   // «Продолжение следует...» на тишине
                         JsonElement u;
                         if (doc.RootElement.TryGetProperty("usage", out u) && u.ValueKind == JsonValueKind.Object)
                         {
