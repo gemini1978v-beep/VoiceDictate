@@ -1092,8 +1092,12 @@ namespace VoiceDictate
             catch (Exception ex)
             {
                 Log(L.T("Ошибка: ", "Error: ") + ex.Message);
-                Log(L.T("Можно скачать вручную: ", "You can download it manually: ") + WhisperEngine.ModelUrlHf + model.File +
-                    L.T(" и положить файл в папку ", " and put the file into ") + WhisperEngine.ModelsDir);
+                if (model.IsGigaAm)
+                    Log(L.T("Можно скачать вручную файлы ", "You can download the files manually: ") + string.Join(", ", model.Parts) + L.T(" отсюда: ", " from ") +
+                        SherpaEngine.GigaAmUrlHf.Replace("/resolve/main/", "/tree/main") + L.T(" и положить их в папку ", " and put them into ") + model.FullPath);
+                else
+                    Log(L.T("Можно скачать вручную: ", "You can download it manually: ") + WhisperEngine.ModelUrlHf + model.File +
+                        L.T(" и положить файл в папку ", " and put the file into ") + WhisperEngine.ModelsDir);
             }
             finally
             {
@@ -1171,8 +1175,10 @@ namespace VoiceDictate
 
             busy = true;
             UpdateStatus();
-            SetStatus(settings.Cloud ? L.T("Проверка OpenRouter…", "Testing OpenRouter…") : L.T("Проверка Whisper…", "Testing Whisper…"), ColorAmber);
-            if (!settings.Cloud && WhisperEngine.UseGpu && WhisperEngine.CudaInstalled)
+            bool giga = !settings.Cloud && model.IsGigaAm;
+            SetStatus(settings.Cloud ? L.T("Проверка OpenRouter…", "Testing OpenRouter…")
+                : giga ? L.T("Проверка GigaAM…", "Testing GigaAM…") : L.T("Проверка Whisper…", "Testing Whisper…"), ColorAmber);
+            if (!settings.Cloud && !giga && WhisperEngine.UseGpu && WhisperEngine.CudaInstalled)
                 Log(L.T("Первый запуск на новой видеокарте (RTX 50xx) может занять несколько минут: драйвер готовит код. ", "The first run on a new GPU (RTX 50xx) may take a few minutes: the driver is preparing code. ") +
                     L.T("Дальше будет быстро.", "After that it will be fast."));
             Log(L.T("Проверка: распознаю тестовую запись (синтезированный голос) ", "Test: recognizing the test recording (synthesized voice) ") + EngineDescription() + "…");
@@ -1188,8 +1194,12 @@ namespace VoiceDictate
                 {
                     Log(L.T("Проверка прошла за ", "Test passed in ") + res.Seconds.ToString("0.0") + L.T(" с (", " s (") + res.Device + L.T("). Распознано: «", "). Recognized: “") +
                         res.Text + "»");
-                    Log(L.T("Должно быть примерно: «Привет! Это проверка распознавания речи. ", "It should be roughly (in Russian): “Привет! Это проверка распознавания речи. ") +
-                        L.T("Если вы видите этот текст, всё работает.»", "Если вы видите этот текст, всё работает.”"));
+                    if (giga)
+                        Log(L.T("Должно быть: «Если вы видите этот текст, всё работает.» Начало тестовой записи («Привет! Это проверка…») ", "It should be: “Если вы видите этот текст, всё работает.” The start of the test recording (“Привет! Это проверка…”) ") +
+                            L.T("GigaAM обычно пропускает — это особенность синтезированного голоса, живую речь модель распознаёт целиком.", "is usually skipped by GigaAM — a quirk of the synthesized voice; live speech is recognized in full."));
+                    else
+                        Log(L.T("Должно быть примерно: «Привет! Это проверка распознавания речи. ", "It should be roughly (in Russian): “Привет! Это проверка распознавания речи. ") +
+                            L.T("Если вы видите этот текст, всё работает.»", "Если вы видите этот текст, всё работает.”"));
                     Log(L.T("Теперь проверьте микрофон: нажмите ", "Now test the microphone: press ") + slotDictate.Saved +
                         L.T(", скажите фразу (полоска громкости должна прыгать) и нажмите ", ", say a phrase (the volume bar should move) and press ") + slotDictate.Saved +
                         L.T(" ещё раз.", " again."));

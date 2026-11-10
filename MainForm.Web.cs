@@ -292,7 +292,7 @@ namespace VoiceDictate
                 var m = cmbModel.Items[i] as WhisperModel;
                 if (m == null) continue;
                 if (models.Length > 1) models.Append(',');
-                models.Append(new Js().S("t", m.Title).B("ok", m.Exists).N("mb", m.SizeMb).ToString());
+                models.Append(new Js().S("t", m.Title).B("ok", m.Exists).N("mb", m.SizeMb).B("giga", m.IsGigaAm).ToString());
             }
             models.Append(']');
 
@@ -587,9 +587,23 @@ namespace VoiceDictate
 
         private FileForm fileForm;
 
+        /// <summary>Модель для файлов: файлы распознаёт только Whisper, поэтому при GigaAM берём скачанную модель Whisper.</summary>
         internal WhisperModel CurrentModel
         {
-            get { return SelectedModel(); }
+            get
+            {
+                WhisperModel sel = SelectedModel();
+                if (sel == null || !sel.IsGigaAm) return sel;
+                WhisperModel any = null;
+                foreach (object o in cmbModel.Items)
+                {
+                    var m = o as WhisperModel;
+                    if (m == null || m.IsGigaAm) continue;
+                    if (m.Exists) return m;
+                    if (any == null) any = m;
+                }
+                return any;
+            }
         }
 
         internal Settings AppSettings

@@ -45,7 +45,7 @@ namespace VoiceDictate
                 SetStatus(L.T("Модель не скачана — нажмите «Скачать»", "Model not downloaded — click “Download”"), ColorRed);
                 return false;
             }
-            if (!File.Exists(WhisperEngine.CliPath))
+            if (!model.IsGigaAm && !File.Exists(WhisperEngine.CliPath))
             {
                 Log(L.T("Не найден ", "Not found: ") + WhisperEngine.CliPath + L.T(". Положите папку whisper рядом с программой.", ". Put the whisper folder next to the program."));
                 SetStatus(L.T("Не найден whisper", "whisper not found"), ColorRed);
@@ -64,19 +64,28 @@ namespace VoiceDictate
 
         /// <summary>
         /// Распознать и, если включено, перевести. На английский переводит сам Whisper (--translate на компьютере,
-        /// language=en в облаке). На другие языки — вторым шагом, текстовой моделью OpenRouter.
+        /// language=en в облаке). На другие языки (и с моделью GigaAM) — вторым шагом, текстовой моделью OpenRouter.
         /// </summary>
         private async Task<WhisperEngine.Result> TranscribeAsync(string wav)
         {
             string src = settings.Language;
             string dst = settings.TranslateTo;
-            bool translate = settings.Translate && !string.IsNullOrEmpty(dst) && dst != src;
-            bool toEnglish = translate && dst == "en";
+            var model = SelectedModel();
+            bool giga = !settings.Cloud && model != null && model.IsGigaAm;
+            bool translate = settings.Translate && !string.IsNullOrEmpty(dst) && dst != src && !(giga && dst == "ru");
+            bool toEnglish = translate && dst == "en" && !giga;   // Whisper переводит на английский сам
 
             WhisperEngine.Result res;
-            if (!settings.Cloud)
+            if (giga)
             {
-                var model = SelectedModel();
+                if (src != "ru" && src != "auto")
+                    Log(L.T("GigaAM понимает только русскую речь. Для языка «", "GigaAM understands only Russian speech. For “") + L.LangName(src, false) +
+                        L.T("» выберите в настройках модель Whisper.", "” choose a Whisper model in Settings."));
+                res = await SherpaEngine.TranscribeAsync(wav, model.FullPath);
+                if (res.Error == null) res.Device += ", GigaAM";
+            }
+            else if (!settings.Cloud)
+            {
                 // русская подсказка тянет Whisper писать по-русски — для перевода на английский берём английскую
                 string prompt = toEnglish && settings.Prompt == Settings.DefaultPrompt ? Settings.DefaultPromptEn : settings.EffectivePrompt;
                 res = await WhisperEngine.TranscribeAsync(wav, model.FullPath, src, prompt, toEnglish);
@@ -95,8 +104,11 @@ namespace VoiceDictate
             if (string.IsNullOrEmpty(settings.OpenRouterKey))
             {
                 Log(L.T("Для перевода на ", "Translating to ") + name +
-                    L.T(" нужен ключ OpenRouter (Настройки → Распознавание). На английский Whisper переводит сам. Вставляю текст без перевода.",
-                        " needs an OpenRouter key (Settings → Recognition). Whisper translates to English by itself. Pasting the text untranslated."));
+                    (giga
+                        ? L.T(" с моделью GigaAM нужен ключ OpenRouter (Настройки → Распознавание). Без ключа на английский переводят модели Whisper. Вставляю текст без перевода.",
+                              " with GigaAM needs an OpenRouter key (Settings → Recognition). Without a key, Whisper models translate to English. Pasting the text untranslated.")
+                        : L.T(" нужен ключ OpenRouter (Настройки → Распознавание). На английский Whisper переводит сам. Вставляю текст без перевода.",
+                              " needs an OpenRouter key (Settings → Recognition). Whisper translates to English by itself. Pasting the text untranslated.")));
                 return res;
             }
             SetStatus(L.T("Перевожу на ", "Translating to ") + name + "…", ColorAmber);
@@ -231,7 +243,9 @@ namespace VoiceDictate
             }
             else
             {
-                Log(L.T("Распознавание: на компьютере (Whisper, бесплатно).", "Recognition: on this computer (Whisper, free)."));
+                var m = SelectedModel();
+                string family = m != null && m.IsGigaAm ? "GigaAM" : "Whisper";
+                Log(L.T("Распознавание: на компьютере (", "Recognition: on this computer (") + family + L.T(", бесплатно).", ", free)."));
             }
             UpdateStatus();
         }

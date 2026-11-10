@@ -619,7 +619,7 @@
 
       <div class="notice" id="modelNotice">
         <div class="txt">
-          <b data-en="Whisper model is not downloaded">Модель Whisper не скачана</b>
+          <b data-en="The model is not downloaded">Модель не скачана</b>
           <span id="noticeSub">Нужно один раз, дальше работает без интернета</span>
           <div class="prog-wrap" id="noticeProg"><div class="progress"><i></i></div></div>
         </div>
@@ -648,7 +648,7 @@
           <div class="row">
             <label for="engine" data-en="Where">Где</label>
             <select class="select" id="engine">
-              <option value="local" data-en="On this computer (Whisper)">На компьютере (Whisper)</option>
+              <option value="local" data-en="On this computer">На компьютере</option>
               <option value="openrouter" data-en="OpenRouter (cloud)">OpenRouter (облако)</option>
             </select>
             <div class="help local-only" data-en="Free and offline: your voice never leaves the computer.">Бесплатно и без интернета: голос никуда не уходит.</div>
@@ -666,12 +666,13 @@
                 </div>
                 <div class="prog-wrap" id="modelProg"><div class="progress"><i></i></div><small></small></div>
               </div>
+              <div class="help" id="modelHelp" data-en="GigaAM v3 by Sber: Russian only, adds punctuation by itself and runs on the CPU faster than Whisper. Translation is done by an OpenRouter model (needs a key); audio and video files are transcribed by Whisper.">GigaAM v3 от Сбера: только русский язык, сама ставит знаки препинания и работает на процессоре быстрее Whisper. Перевод — моделью OpenRouter (нужен ключ), файлы аудио и видео распознаёт Whisper.</div>
             </div>
-            <div class="opt">
+            <div class="opt" id="gpuOpt">
               <label class="switch"><input type="checkbox" id="gpu"><i></i></label>
               <label class="lbl" for="gpu" data-en="NVIDIA GPU (CUDA)&lt;small&gt;Use GPU acceleration for faster recognition.&lt;/small&gt;">Видеокарта NVIDIA (CUDA)<small>Использовать видеоускорение для более быстрой обработки.</small></label>
             </div>
-            <div class="gpu-extra">
+            <div class="gpu-extra" id="gpuExtra">
               <button class="btn" id="cudaBtn">Скачать ускорение NVIDIA (~640 МБ)</button>
               <div class="prog-wrap" id="cudaProg"><div class="progress"><i></i></div><small></small></div>
             </div>
@@ -713,7 +714,7 @@
           <div class="row">
             <label for="trSel" data-en="Translate to">Перевести на</label>
             <select class="select" id="trSel"></select>
-            <div class="help local-only" data-en="Into English Whisper translates by itself, free. Other languages are translated by a cheap OpenRouter model (~$0.0001 per phrase) and need an OpenRouter key.">На английский переводит сам Whisper, бесплатно. На другие языки — дешёвая модель OpenRouter (~$0,0001 за фразу), нужен ключ OpenRouter.</div>
+            <div class="help local-only" data-en="Into English Whisper translates by itself, free. Other languages (and any language with GigaAM) are translated by a cheap OpenRouter model (~$0.0001 per phrase) and need an OpenRouter key.">На английский переводит сам Whisper, бесплатно. На другие языки (а с моделью GigaAM — на любой) — дешёвая модель OpenRouter (~$0,0001 за фразу), нужен ключ OpenRouter.</div>
             <div class="help cloud-only" data-en="Into English Whisper translates by itself. Other languages are translated by a cheap OpenRouter model (~$0.0001 per phrase).">На английский переводит сам Whisper. На другие языки — дешёвая модель OpenRouter (~$0,0001 за фразу).</div>
           </div>
         </div>
@@ -1230,12 +1231,17 @@
     // модель не скачана
     var cloud = S.engine === 'openrouter';
     app.classList.toggle('cloud', cloud);
+    var m = S.models[S.model];
+    var giga = !!(m && m.giga);   // GigaAM: без видеокарты и без перевода силами Whisper
+    var family = giga ? 'GigaAM' : 'Whisper';
     $('engineSub').textContent = cloud
       ? 'OpenRouter · ' + (S.orModelName || '') + (S.orBalance && !S.orBalanceError && S.orBalance.charAt(0) === '$' ? ' · ' + S.orBalance : '')
-      : 'Whisper';
+      : family;
     var noModel = !cloud && !S.modelExists;
     $('modelNotice').classList.toggle('show', noModel);
-    var m = S.models[S.model];
+    $('modelHelp').style.display = giga ? '' : 'none';
+    $('gpuOpt').style.display = giga ? 'none' : '';
+    $('gpuExtra').style.display = giga ? 'none' : '';
     $('noticeSub').textContent = m ? m.t.split(' — ')[0] + T(' · нужно один раз, дальше без интернета', ' · needed once, then works offline') : T('Нужно один раз, дальше без интернета', 'Needed once, then works offline');
     $('noticeDl').disabled = !S.canDownload;
 
@@ -1275,7 +1281,7 @@
     dl.disabled = S.modelExists || !S.canDownload;
     $('testBtn').disabled = !S.canTest || (cloud ? !S.orHasKey : !S.modelExists);
 
-    $('tbSub').textContent = T('Голосовой ввод ', 'Voice Input ') + (S.version ? S.version + ' ' : '') + '— ' + (cloud ? 'OpenRouter' : 'Whisper');
+    $('tbSub').textContent = T('Голосовой ввод ', 'Voice Input ') + (S.version ? S.version + ' ' : '') + '— ' + (cloud ? 'OpenRouter' : family);
     $('engine').value = cloud ? 'openrouter' : 'local';
     $('engine').disabled = !S.canModel;
     $('orKey').placeholder = S.orHasKey ? S.orKeyMask + T(' — сохранён', ' — saved') : 'sk-or-v1-…';
@@ -1371,7 +1377,8 @@
         type: 'state', hotkey: 'F3', hotkeyDraft: 'F3', recording: false, busy: false, downloading: false,
         recSeconds: 0, status: 'Готов. F3 — начать запись', statusKind: 'idle',
         models: [{ t: 'small, 190 МБ — рекомендую', ok: true, mb: 190 }, { t: 'large-v3-turbo, 550 МБ — точнее', ok: false, mb: 550 },
-                 { t: 'medium, 515 МБ', ok: false, mb: 515 }, { t: 'base, 60 МБ — быстрая, но хуже', ok: false, mb: 60 }],
+                 { t: 'medium, 515 МБ', ok: false, mb: 515 }, { t: 'base, 60 МБ — быстрая, но хуже', ok: false, mb: 60 },
+                 { t: 'GigaAM v3, 220 МБ — только русский, быстрая и точная', ok: false, mb: 220, giga: true }],
         model: 0, modelExists: true, mics: ['По умолчанию (как в Windows)', 'Микрофон (Realtek Audio)', 'Headset (USB Audio)'], mic: 0, micSource: 'direct', lang: 'ru', version: '1.1', speechLang: 'ru', translate: false, translateTo: 'en',
         langs: [{ c: 'ru', n: 'Русский' }, { c: 'en', n: 'English' }, { c: 'uk', n: 'Українська' }, { c: 'de', n: 'Deutsch' }],
         engine: 'local', orHasKey: false, orKeyMask: '', orModel: 0, orModelName: 'Whisper Large V3 Turbo',

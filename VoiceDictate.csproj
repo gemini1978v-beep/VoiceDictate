@@ -19,6 +19,7 @@
   <ItemGroup>
     <!-- WebView2 (движок Edge) — окно рисуется HTML/CSS из ui\index.html -->
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+    <PackageReference Include="org.k2fsa.sherpa.onnx" Version="2.0.1" />
   </ItemGroup>
 
   <ItemGroup>

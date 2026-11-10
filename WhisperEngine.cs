@@ -13,19 +13,29 @@ using System.Threading.Tasks;
 
 namespace VoiceDictate
 {
-    /// <summary>Модель Whisper, которую программа умеет скачать.</summary>
+    /// <summary>
+    /// Модель, которую программа умеет скачать: файл Whisper (.bin) или папка GigaAM (несколько файлов ONNX).
+    /// </summary>
     internal sealed class WhisperModel
     {
-        public string File;      // имя файла в папке models
+        public string File;      // имя файла (или папки GigaAM) в папке models
         public int SizeMb;
+        public readonly string[] Parts;   // файлы папки GigaAM; null — модель Whisper
         private readonly string titleRu, titleEn;
 
-        public WhisperModel(string file, string titleRu, string titleEn, int sizeMb)
+        public WhisperModel(string file, string titleRu, string titleEn, int sizeMb, string[] parts = null)
         {
             File = file;
             this.titleRu = titleRu;
             this.titleEn = titleEn;
             SizeMb = sizeMb;
+            Parts = parts;
+        }
+
+        /// <summary>GigaAM (sherpa-onnx, SherpaEngine.cs), а не Whisper.</summary>
+        public bool IsGigaAm
+        {
+            get { return Parts != null; }
         }
 
         /// <summary>Как показать в списке (на языке интерфейса).</summary>
@@ -45,6 +55,9 @@ namespace VoiceDictate
             {
                 try
                 {
+                    if (IsGigaAm)
+                        return Parts.All(p => System.IO.File.Exists(Path.Combine(FullPath, p))) &&
+                               new FileInfo(Path.Combine(FullPath, Parts[0])).Length > 1024 * 1024;
                     var fi = new FileInfo(FullPath);
                     return fi.Exists && fi.Length > 1024 * 1024;
                 }
@@ -74,6 +87,8 @@ namespace VoiceDictate
             new WhisperModel("ggml-large-v3-turbo-q5_0.bin", "large-v3-turbo, 550 МБ — точнее", "large-v3-turbo, 550 MB — more accurate", 550),
             new WhisperModel("ggml-medium-q5_0.bin", "medium, 515 МБ", "medium, 515 MB", 515),
             new WhisperModel("ggml-base-q5_1.bin", "base, 60 МБ — быстрая, но хуже", "base, 60 MB — fast but less accurate", 60),
+            new WhisperModel(SherpaEngine.GigaAmDir, "GigaAM v3, 220 МБ — только русский, быстрая и точная",
+                "GigaAM v3, 220 MB — Russian only, fast and accurate", 220, SherpaEngine.GigaAmFiles),
         };
 
         // Фразы, которые Whisper «придумывает» на тишине (научился на субтитрах)
@@ -420,6 +435,11 @@ namespace VoiceDictate
             CancellationToken ct)
         {
             Directory.CreateDirectory(ModelsDir);
+            if (model.IsGigaAm)
+            {
+                await DownloadPartsAsync(model, progress, log, ct);
+                return;
+            }
             string part = model.FullPath + ".part";
             string[] urls = { ModelUrlHf + model.File, ModelUrlMirror + model.File };
             Exception last = null;
@@ -478,6 +498,113 @@ namespace VoiceDictate
                 }
             }
             throw new IOException(L.T("не удалось скачать модель: ", "could not download the model: ") + (last != null ? last.Message : L.T("нет ответа", "no response")));
+        }
+
+        /// <summary>Модель GigaAM — папка из нескольких файлов: качаем во временную папку, потом переименовываем.</summary>
+        private static async Task DownloadPartsAsync(WhisperModel model, Action<double, double> progress, Action<string> log,
+            CancellationToken ct)
+        {
+            string tmpDir = model.FullPath + ".part";
+            double totalMb = model.SizeMb;
+            Exception last = null;
+
+            using (var http = new HttpClient())
+            {
+                http.Timeout = Timeout.InfiniteTimeSpan;
+                http.DefaultRequestHeaders.UserAgent.ParseAdd("VoiceDictate/1.0");
+                foreach (string baseUrl in new[] { SherpaEngine.GigaAmUrlHf, SherpaEngine.GigaAmUrlMirror })
+                {
+                    try
+                    {
+                        if (Directory.Exists(tmpDir)) Directory.Delete(tmpDir, true);
+                        Directory.CreateDirectory(tmpDir);
+                        log(L.T("Скачиваю ", "Downloading ") + baseUrl);
+                        long before = 0;   // байт в уже скачанных файлах
+                        foreach (string file in model.Parts)
+                        {
+                            string path = Path.Combine(tmpDir, file);
+                            using (var resp = await http.GetAsync(baseUrl + file, HttpCompletionOption.ResponseHeadersRead, ct))
+                            {
+                                resp.EnsureSuccessStatusCode();
+                                using (var src = await resp.Content.ReadAsStreamAsync())
+                                using (var dst = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, 1 << 16))
+                                {
+                                    var buf = new byte[1 << 16];
+                                    long done = 0;
+                                    int n;
+                                    var tick = Stopwatch.StartNew();
+                                    while ((n = await src.ReadAsync(buf, 0, buf.Length, ct)) > 0)
+                                    {
+                                        await dst.WriteAsync(buf, 0, n, ct);
+                                        done += n;
+                                        if (tick.ElapsedMilliseconds > 250)
+                                        {
+                                            tick.Restart();
+                                            double mb = (before + done) / 1048576.0;
+                                            progress(Math.Min(0.99, mb / totalMb), mb);
+                                        }
+                                    }
+                                    before += done;
+                                }
+                            }
+                            if (LooksLikeHtml(path))
+                                throw new InvalidDataException(L.T("скачался не файл модели (возможно, страница-заглушка)", "the download is not a model file (maybe a placeholder page)"));
+                        }
+                        progress(1, before / 1048576.0);
+
+                        var probe = new WhisperModel(Path.GetFileName(tmpDir), "", "", 0, model.Parts);
+                        if (!probe.Exists)
+                            throw new InvalidDataException(L.T("скачались не все файлы модели", "not all model files were downloaded"));
+                        SherpaEngine.Unload();   // старая папка могла быть открыта
+                        if (Directory.Exists(model.FullPath)) Directory.Delete(model.FullPath, true);
+                        Directory.Move(tmpDir, model.FullPath);
+                        return;
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        TryDeleteDir(tmpDir);
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        last = ex;
+                        log(L.T("Не получилось: ", "Failed: ") + ex.Message);
+                        TryDeleteDir(tmpDir);
+                    }
+                }
+            }
+            throw new IOException(L.T("не удалось скачать модель: ", "could not download the model: ") + (last != null ? last.Message : L.T("нет ответа", "no response")));
+        }
+
+        /// <summary>Вместо файла пришла HTML-страница (заглушка прокси, ошибка сайта).</summary>
+        private static bool LooksLikeHtml(string path)
+        {
+            try
+            {
+                using (var fs = File.OpenRead(path))
+                {
+                    var b = new byte[64];
+                    int n = fs.Read(b, 0, b.Length);
+                    string head = Encoding.ASCII.GetString(b, 0, n).TrimStart().ToLowerInvariant();
+                    return head.StartsWith("<!doctype") || head.StartsWith("<html");
+                }
+            }
+            catch
+            {
+                return true;
+            }
+        }
+
+        private static void TryDeleteDir(string path)
+        {
+            try
+            {
+                if (Directory.Exists(path)) Directory.Delete(path, true);
+            }
+            catch
+            {
+                // пусть лежит
+            }
         }
 
         /// <summary>Скачать и распаковать whisper.cpp с CUDA в папку whisper-cuda.</summary>

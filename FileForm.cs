@@ -299,7 +299,7 @@ namespace VoiceDictate
             WhisperModel model = main.CurrentModel;
             if (model == null || !model.Exists)
             {
-                Fail(L.T("Модель Whisper не скачана — скачайте её в настройках главного окна.", "The Whisper model is not downloaded — download it in the main window settings."), null);
+                Fail(L.T("Файлы распознаёт Whisper, а его модель не скачана — скачайте её в настройках главного окна.", "Files are transcribed by Whisper, and its model is not downloaded — download it in the main window settings."), null);
                 return;
             }
             if (!FileTranscriber.CanRead(filePath))
