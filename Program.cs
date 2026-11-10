@@ -14,16 +14,34 @@ namespace VoiceDictate
         /// <summary>Сигнал от повторного запуска: «покажи окно». Его ждёт MainForm.</summary>
         internal static EventWaitHandle ShowEvent;
 
+        /// <summary>Программу только что обновили (запущена старой версией после замены файлов).</summary>
+        internal static bool AfterUpdate;
+
         [DllImport("user32.dll")]
         private static extern bool AllowSetForegroundWindow(int dwProcessId);
 
         [STAThread]
-        private static void Main()
+        private static void Main(string[] args)
         {
-            bool createdNew;
-            using (var mutex = new Mutex(true, MutexName, out createdNew))
+            if (Array.IndexOf(args, Updater.InstallArg) >= 0)
             {
-                if (!createdNew)
+                Updater.RunInstaller(args);   // новая версия раскладывает себя на место старой и запускает её
+                return;
+            }
+            AfterUpdate = Array.IndexOf(args, Updater.AfterUpdateArg) >= 0;
+            using (var mutex = new Mutex(false, MutexName))
+            {
+                bool owned;
+                try
+                {
+                    // после обновления старая копия ещё закрывается — ждём её
+                    owned = mutex.WaitOne(AfterUpdate ? 20000 : 0);
+                }
+                catch (AbandonedMutexException)
+                {
+                    owned = true;   // прошлая копия завершилась аварийно
+                }
+                if (!owned)
                 {
                     // Программа уже работает — просим её показаться и выходим
                     try
@@ -38,14 +56,20 @@ namespace VoiceDictate
                     return;
                 }
 
-                using (ShowEvent = new EventWaitHandle(false, EventResetMode.AutoReset, ShowEventName))
+                try
                 {
-                    Application.SetHighDpiMode(HighDpiMode.SystemAware);
-                    Application.EnableVisualStyles();
-                    Application.SetCompatibleTextRenderingDefault(false);
-                    Application.Run(new MainForm());
+                    using (ShowEvent = new EventWaitHandle(false, EventResetMode.AutoReset, ShowEventName))
+                    {
+                        Application.SetHighDpiMode(HighDpiMode.SystemAware);
+                        Application.EnableVisualStyles();
+                        Application.SetCompatibleTextRenderingDefault(false);
+                        Application.Run(new MainForm());
+                    }
                 }
-                GC.KeepAlive(mutex);
+                finally
+                {
+                    mutex.ReleaseMutex();
+                }
             }
         }
     }

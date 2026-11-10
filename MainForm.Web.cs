@@ -344,6 +344,7 @@ namespace VoiceDictate
                 .B("canModel", !busy && !recording && !downloading)
                 .B("canMic", !recording);
             AddCloudState(js);   // MainForm.Cloud.cs
+            AddUpdateState(js);  // MainForm.Update.cs
             string json = js.ToString();
 
             if (json == lastStateJson) return;
@@ -474,6 +475,9 @@ namespace VoiceDictate
                     break;
                 case "download":
                     DownloadModel();
+                    break;
+                case "update":
+                    InstallUpdate();
                     break;
                 case "test":
                     RunTest();

@@ -30,6 +30,8 @@ Russian and many other languages.
 - English and Russian interface (RU/EN switch on the main screen); recognizes English,
   Russian and other languages.
 - Runs from the tray, configurable hotkey, light and dark themes.
+- **Updates itself:** when a new version is out, an “Update” button appears on the main screen —
+  the program downloads it, replaces its files (settings and models are kept) and restarts.
 
 Windows voice typing (Win+H) is not needed, so everything works on **Windows 10** too.
 
@@ -273,6 +275,8 @@ How GigaAM differs from Whisper:
 - **Press Enter after pasting + delay** — e.g. 0.2 s.
 - **Type character by character** — if Ctrl+V does not work in the target window.
 - **Window always on top**.
+- **Update check** — on startup and every 12 hours the program asks GitHub whether a new version
+  is out. To turn it off: `check_updates = no` in `settings.ini`.
 
 In `settings.ini` you can also change the Whisper prompt (`prompt` — sample text in the
 desired style, helps with punctuation).

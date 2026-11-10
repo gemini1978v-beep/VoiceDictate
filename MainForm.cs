@@ -148,6 +148,7 @@ namespace VoiceDictate
                     slotDictate.Saved + L.T(" — начать запись, ещё раз ", " — start recording, press ") + slotDictate.Saved +
                     L.T(" — распознать (Whisper) и отправить в активное окно.", " again — recognize and send to the active window."));
                 CheckSetup();
+                InitUpdates();   // MainForm.Update.cs
                 LoadOpenRouterModels();
                 if (settings.Cloud) RefreshBalance(false);
                 if (settings.MicSource == "browser" && StartBrowserMic())

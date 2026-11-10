@@ -1,0 +1,119 @@
+using System;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace VoiceDictate
+{
+    /// <summary>
+    /// Новая версия: проверяем GitHub при запуске и раз в 12 часов (Updater.cs). Если есть —
+    /// плашка «Вышла версия X» на главном экране, кнопка «Обновить» скачивает её и перезапускает программу.
+    /// </summary>
+    internal sealed partial class MainForm
+    {
+        private Updater.Release updRelease;   // найденная новая версия (null — нет)
+        private bool updating;
+        private string updAnnounced = "";     // про какую версию уже написали в журнал
+        private readonly Timer updTimer = new Timer();
+
+        /// <summary>Из события Shown.</summary>
+        private void InitUpdates()
+        {
+            Updater.CleanupAfterUpdate();
+            if (Program.AfterUpdate) Log(L.T("Программа обновлена до версии ", "The program was updated to version ") + L.Version + ".");
+            var later = new Timer { Interval = 5000 };
+            later.Tick += (s, e) =>
+            {
+                later.Stop();
+                later.Dispose();
+                Updater.CleanupAfterUpdate();   // установщик из папки update к этому времени уже закрылся
+                if (settings.CheckUpdates) CheckUpdate();
+            };
+            later.Start();
+            if (!settings.CheckUpdates) return;
+            updTimer.Interval = 12 * 60 * 60 * 1000;
+            updTimer.Tick += (s, e) => CheckUpdate();
+            updTimer.Start();
+        }
+
+        private async void CheckUpdate()
+        {
+            if (updating) return;
+            Updater.Release r;
+            try
+            {
+                r = await Updater.CheckAsync();
+            }
+            catch
+            {
+                return;   // нет интернета или GitHub не ответил — проверим в следующий раз
+            }
+            if (IsDisposed || r == null) return;
+            updRelease = r;
+            if (updAnnounced != r.Version)
+            {
+                updAnnounced = r.Version;
+                Log(L.T("Вышла новая версия ", "A new version is available: ") + r.Version + L.T(". Нажмите «Обновить» на главном экране.", ". Click “Update” on the main screen."));
+                if (!Visible && tray != null)
+                {
+                    try
+                    {
+                        tray.ShowBalloonTip(5000, L.T("Голосовой ввод: вышла версия ", "Voice Input: version ") + r.Version + L.T("", " is out"),
+                            L.T("Откройте окно и нажмите «Обновить».", "Open the window and click “Update”."), ToolTipIcon.None);
+                    }
+                    catch
+                    {
+                        // уведомления отключены
+                    }
+                }
+            }
+            WebPushState();
+        }
+
+        private async void InstallUpdate()
+        {
+            Updater.Release r = updRelease;
+            if (r == null || updating) return;
+            if (recording || busy || downloading)
+            {
+                Log(L.T("Сначала дождитесь окончания записи, распознавания или скачивания.", "Wait for recording, recognition or download to finish first."));
+                return;
+            }
+            updating = true;
+            downloading = true;   // кнопки скачивания и выбора модели заняты
+            UpdateStatus();
+            SetStatus(L.T("Скачиваю версию ", "Downloading version ") + r.Version + "…", ColorAmber);
+            try
+            {
+                string newRoot = await Updater.DownloadAsync(r,
+                    (frac, mb) => OnUi(() => WebProgress("update", frac, mb)),
+                    msg => OnUi(() => Log(msg)),
+                    closing.Token);
+                Log(L.T("Версия ", "Version ") + r.Version + L.T(" скачана, перезапускаю программу…", " downloaded, restarting the program…"));
+                Updater.StartInstaller(newRoot);   // она дождётся, пока эта копия закроется
+                Close();
+                return;
+            }
+            catch (OperationCanceledException)
+            {
+                // окно закрывают
+            }
+            catch (Exception ex)
+            {
+                Log(L.T("Обновить не удалось: ", "Update failed: ") + ex.Message);
+                if (r.PageUrl != null)
+                    Log(L.T("Можно скачать вручную: ", "You can download it manually: ") + r.PageUrl);
+            }
+            updating = false;
+            downloading = false;
+            if (!IsDisposed) UpdateStatus();
+        }
+
+        /// <summary>Часть состояния для страницы: новая версия.</summary>
+        private void AddUpdateState(Js js)
+        {
+            js.S("updVer", updRelease != null ? updRelease.Version : "")
+              .S("updUrl", updRelease != null ? updRelease.PageUrl ?? "" : "")
+              .B("updating", updating);
+        }
+    }
+}

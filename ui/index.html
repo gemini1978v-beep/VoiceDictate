@@ -364,6 +364,7 @@
   .notice .txt { flex: 1; min-width: 0; }
   .notice b { display: block; font-size: 13px; font-weight: 600; }
   .notice span { display: block; font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+  .notice a { color: inherit; }
 
   .textcard {
     margin-top: 14px; width: 100%;
@@ -624,6 +625,15 @@
           <div class="prog-wrap" id="noticeProg"><div class="progress"><i></i></div></div>
         </div>
         <button class="btn primary" id="noticeDl" data-en="Download">Скачать</button>
+      </div>
+
+      <div class="notice" id="updNotice">
+        <div class="txt">
+          <b id="updTitle">Вышла новая версия</b>
+          <span><a href="#" id="updLink" data-en="What's new">Что нового</a> · <span id="updSub" style="display:inline">настройки и модели сохранятся</span></span>
+          <div class="prog-wrap" id="updProg"><div class="progress"><i></i></div></div>
+        </div>
+        <button class="btn primary" id="updBtn" data-en="Update">Обновить</button>
       </div>
 
       <div class="textcard" id="textCard">
@@ -1031,6 +1041,8 @@
   // ------------------------------------------------------------ главный экран
   $('micBtn').onclick = function () { flushText(); send('toggle'); };
   $('noticeDl').onclick = function () { progressWhat = 'model'; progressFrac = -1; send('download'); };
+  $('updBtn').onclick = function () { progressWhat = 'update'; progressFrac = -1; send('update'); };
+  $('updLink').onclick = function (e) { e.preventDefault(); if (S && S.updUrl) send('open', S.updUrl); };
   $('sendBtn').onclick = function () { flushText(); send('send'); };
   $('clearBtn').onclick = function () { $('text').value = ''; lastSentText = ''; send('clear'); };
   var textTimer = 0;
@@ -1274,11 +1286,18 @@
     $('gpuExtra').style.display = giga ? 'none' : '';
     $('noticeSub').textContent = m ? m.t.split(' — ')[0] + T(' · нужно один раз, дальше без интернета', ' · needed once, then works offline') : T('Нужно один раз, дальше без интернета', 'Needed once, then works offline');
     $('noticeDl').disabled = !S.canDownload;
+    var upd = !!S.updVer;
+    $('updNotice').classList.toggle('show', upd);
+    if (upd) {
+      $('updTitle').textContent = T('Вышла версия ', 'Version ') + S.updVer + T('', ' is out');
+      $('updSub').textContent = S.updating ? T('скачиваю и устанавливаю…', 'downloading and installing…') : T('настройки и модели сохранятся', 'settings and models are kept');
+      $('updBtn').disabled = !!S.updating || !S.canDownload || rec || S.busy;
+    }
 
     // текст
     var showText = !!S.text || !S.autoSend;
     $('textCard').classList.toggle('show', showText);
-    app.classList.toggle('has-extra', showText || noModel);
+    app.classList.toggle('has-extra', showText || noModel || !!S.updVer);
     if (S.text !== lastSentText) {
       var ta = $('text');
       if (document.activeElement !== ta || S.text === '') ta.value = S.text;
@@ -1382,6 +1401,13 @@
       b.classList.toggle('indet', progressFrac < 0);
       b.querySelector('i').style.width = progressFrac >= 0 ? Math.round(progressFrac * 100) + '%' : '';
     }
+    var up = $('updProg'), onU = active && progressWhat === 'update';
+    up.classList.toggle('show', onU);
+    if (onU) {
+      var ub = up.querySelector('.progress');
+      ub.classList.toggle('indet', progressFrac < 0);
+      ub.querySelector('i').style.width = progressFrac >= 0 ? Math.round(progressFrac * 100) + '%' : '';
+    }
     if (!active) progressWhat = null;
   }
 
@@ -1423,6 +1449,7 @@
       if (q.get('dark')) this.st.theme = 'dark';
       if (q.get('lang') === 'en') this.st.lang = 'en';
       if (q.get('nomodel')) { this.st.model = 2; this.st.modelExists = false; }
+      if (q.get('upd')) { this.st.updVer = '1.4'; this.st.updUrl = 'https://github.com/gemini1978v-beep/VoiceDictate/releases'; }
       if (q.get('text')) { this.st.autoSend = false; this.st.text = 'Привет! Это проверка распознавания речи. Если вы видите этот текст, всё работает.'; }
       if (q.get('busy')) { this.st.busy = true; this.st.status = 'Распознаю 0:04 записи…'; this.st.statusKind = 'busy'; }
       this.push();
