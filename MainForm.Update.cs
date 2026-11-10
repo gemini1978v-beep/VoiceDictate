@@ -5,14 +5,16 @@ using System.Windows.Forms;
 namespace VoiceDictate
 {
     /// <summary>
-    /// Новая версия: проверяем GitHub при запуске и раз в 12 часов (Updater.cs). Если есть —
-    /// плашка «Вышла версия X» на главном экране, кнопка «Обновить» скачивает её и перезапускает программу.
+    /// Новая версия: проверяем GitHub в фоне при запуске и раз в 12 часов (Updater.cs). Нет интернета — молчим.
+    /// Если есть — плашка «Вышла версия X» на главном экране и строка в «О программе»; «Обновить» скачивает
+    /// её и перезапускает программу. Кнопка «Проверить и обновить» в настройках делает то же сразу.
     /// </summary>
     internal sealed partial class MainForm
     {
         private Updater.Release updRelease;   // найденная новая версия (null — нет)
         private bool updating;
         private string updAnnounced = "";     // про какую версию уже написали в журнал
+        private string updState = "";         // "" — не проверяли, checking, latest, available, offline
         private readonly Timer updTimer = new Timer();
 
         /// <summary>Из события Shown.</summary>
@@ -20,35 +22,53 @@ namespace VoiceDictate
         {
             Updater.CleanupAfterUpdate();
             if (Program.AfterUpdate) Log(L.T("Программа обновлена до версии ", "The program was updated to version ") + L.Version + ".");
+            if (settings.CheckUpdates)
+            {
+                var first = CheckUpdate(false);   // в фоне: окно уже работает
+                updTimer.Interval = 12 * 60 * 60 * 1000;
+                updTimer.Tick += (s, e) => { var next = CheckUpdate(false); };
+                updTimer.Start();
+            }
             var later = new Timer { Interval = 5000 };
             later.Tick += (s, e) =>
             {
                 later.Stop();
                 later.Dispose();
                 Updater.CleanupAfterUpdate();   // установщик из папки update к этому времени уже закрылся
-                if (settings.CheckUpdates) CheckUpdate();
             };
             later.Start();
-            if (!settings.CheckUpdates) return;
-            updTimer.Interval = 12 * 60 * 60 * 1000;
-            updTimer.Tick += (s, e) => CheckUpdate();
-            updTimer.Start();
         }
 
-        private async void CheckUpdate()
+        /// <summary>Спросить GitHub. true — есть версия новее. manual — по кнопке: пишем результат в журнал.</summary>
+        private async Task<bool> CheckUpdate(bool manual)
         {
-            if (updating) return;
+            if (updating || updState == "checking") return updRelease != null;
+            updState = "checking";
+            WebPushState();
             Updater.Release r;
             try
             {
                 r = await Updater.CheckAsync();
             }
-            catch
+            catch (Exception ex)
             {
-                return;   // нет интернета или GitHub не ответил — проверим в следующий раз
+                // нет интернета или GitHub не ответил — ничего не делаем, проверим в следующий раз
+                updState = "offline";
+                if (manual) Log(L.T("Не удалось проверить обновления: ", "Could not check for updates: ") + ex.Message);
+                if (!IsDisposed) WebPushState();
+                return false;
             }
-            if (IsDisposed || r == null) return;
+            if (IsDisposed) return false;
+            if (r == null)
+            {
+                updState = "latest";
+                updRelease = null;
+                if (manual) Log(L.T("Установлена последняя версия ", "You have the latest version ") + L.Version + ".");
+                WebPushState();
+                return false;
+            }
             updRelease = r;
+            updState = "available";
             if (updAnnounced != r.Version)
             {
                 updAnnounced = r.Version;
@@ -67,6 +87,14 @@ namespace VoiceDictate
                 }
             }
             WebPushState();
+            return true;
+        }
+
+        /// <summary>Кнопка «Проверить и обновить»: проверить сейчас и, если есть новая версия, сразу поставить.</summary>
+        private async void CheckAndInstall()
+        {
+            if (updating) return;
+            if (updRelease != null || await CheckUpdate(true)) InstallUpdate();
         }
 
         private async void InstallUpdate()
@@ -113,7 +141,8 @@ namespace VoiceDictate
         {
             js.S("updVer", updRelease != null ? updRelease.Version : "")
               .S("updUrl", updRelease != null ? updRelease.PageUrl ?? "" : "")
-              .B("updating", updating);
+              .B("updating", updating)
+              .S("updState", updState);
         }
     }
 }

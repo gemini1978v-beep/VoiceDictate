@@ -479,6 +479,9 @@ namespace VoiceDictate
                 case "update":
                     InstallUpdate();
                     break;
+                case "updateNow":
+                    CheckAndInstall();
+                    break;
                 case "test":
                     RunTest();
                     break;

@@ -391,8 +391,14 @@
   .app.has-extra .spin { width: 110px; height: 110px; margin: -55px 0 0 -55px; }
   .app.has-extra .status { margin-top: 10px; }
 
+  .vercorner {
+    position: absolute; right: 12px; bottom: 10px;
+    font-size: 11px; color: var(--muted-2); cursor: pointer; white-space: nowrap;
+  }
+  .vercorner:hover { color: var(--blue); }
+  .vercorner.new { color: var(--blue); font-weight: 600; }
   .lastlog {
-    position: absolute; left: 20px; right: 20px; bottom: 10px;
+    position: absolute; left: 76px; right: 76px; bottom: 10px;
     text-align: center; font-size: 11.5px; color: var(--muted-2);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     cursor: pointer; opacity: 0; transition: opacity .4s;
@@ -497,6 +503,9 @@
   .row.wide .under { grid-column: 1; }
   .row.wide .btns { margin-top: 1px; }
   .bal { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .vstate { font-size: 12px; color: var(--muted); }
+  .vstate.new { color: var(--blue); font-weight: 600; }
+  .vstate.err { color: var(--muted-2); }
   .bal b { flex: 1; min-width: 0; font-size: 15px; font-weight: 650; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .bal b.err { font-size: 12.5px; font-weight: 500; color: var(--red); }
   .bal .btn { height: 28px; }
@@ -645,6 +654,7 @@
       </div>
 
       <div class="lastlog" id="lastLog" title="Открыть журнал" data-en-title="Open the log"></div>
+      <div class="vercorner" id="verCorner" title="О программе и обновления" data-en-title="About and updates"></div>
       <div class="dropover" id="dropover"><div data-en="Drop to transcribe the file&lt;small&gt;audio or video → text&lt;/small&gt;">Отпустите, чтобы распознать файл<small>аудио или видео → текст</small></div></div>
     </main>
 
@@ -786,6 +796,19 @@
           <div class="opt">
             <label class="switch"><input type="checkbox" id="topmost"><i></i></label>
             <label class="lbl" for="topmost" data-en="Window always on top">Окно поверх остальных</label>
+          </div>
+        </div>
+
+        <div class="card-title" data-en="About">О программе</div>
+        <div class="card" id="aboutCard">
+          <div class="row">
+            <label data-en="Version">Версия</label>
+            <div class="bal"><b id="verNum">—</b><span class="vstate" id="verState"></span></div>
+            <div class="under">
+              <div class="btns"><button class="btn" id="updNowBtn" data-en="Check and update">Проверить и обновить</button></div>
+              <div class="prog-wrap" id="updProg2"><div class="progress"><i></i></div><small></small></div>
+            </div>
+            <div class="help" id="verHelp"></div>
           </div>
         </div>
 
@@ -1034,7 +1057,7 @@
   document.addEventListener('mousedown', function (e) {
     if (e.button !== 0) return;
     var t = e.target;
-    if (t.closest('button, input, select, textarea, label, a, .lastlog, .textcard, .notice')) return;
+    if (t.closest('button, input, select, textarea, label, a, .lastlog, .vercorner, .textcard, .notice')) return;
     if (t.closest('[data-drag]')) { e.preventDefault(); send('drag'); }
   });
 
@@ -1042,6 +1065,11 @@
   $('micBtn').onclick = function () { flushText(); send('toggle'); };
   $('noticeDl').onclick = function () { progressWhat = 'model'; progressFrac = -1; send('download'); };
   $('updBtn').onclick = function () { progressWhat = 'update'; progressFrac = -1; send('update'); };
+  $('updNowBtn').onclick = function () { progressWhat = 'update'; progressFrac = -1; send('updateNow'); };
+  $('verCorner').onclick = function () {
+    openSettings();
+    setTimeout(function () { $('aboutCard').scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 200);
+  };
   $('updLink').onclick = function (e) { e.preventDefault(); if (S && S.updUrl) send('open', S.updUrl); };
   $('sendBtn').onclick = function () { flushText(); send('send'); };
   $('clearBtn').onclick = function () { $('text').value = ''; lastSentText = ''; send('clear'); };
@@ -1286,6 +1314,24 @@
     $('gpuExtra').style.display = giga ? 'none' : '';
     $('noticeSub').textContent = m ? m.t.split(' — ')[0] + T(' · нужно один раз, дальше без интернета', ' · needed once, then works offline') : T('Нужно один раз, дальше без интернета', 'Needed once, then works offline');
     $('noticeDl').disabled = !S.canDownload;
+    // версия: угол главного экрана и «О программе»
+    var vc = $('verCorner');
+    vc.textContent = 'v' + (S.version || '') + (S.updVer ? T(' · есть ', ' · new ') + S.updVer : '');
+    vc.classList.toggle('new', !!S.updVer);
+    $('verNum').textContent = S.version || '—';
+    var vs = $('verState'), st = S.updState || '';
+    vs.textContent = S.updating ? T('обновляю…', 'updating…')
+      : st === 'checking' ? T('проверяю…', 'checking…')
+      : st === 'available' ? T('доступна версия ', 'version ') + S.updVer + T('', ' is available')
+      : st === 'latest' ? T('последняя', 'up to date')
+      : st === 'offline' ? T('не удалось проверить — нет связи с GitHub', 'could not check — GitHub is unreachable')
+      : '';
+    vs.className = 'vstate' + (st === 'available' ? ' new' : st === 'offline' ? ' err' : '');
+    var nb = $('updNowBtn');
+    nb.textContent = S.updVer ? T('Обновить до ', 'Update to ') + S.updVer : T('Проверить и обновить', 'Check and update');
+    nb.disabled = !!S.updating || st === 'checking' || !S.canDownload || rec || S.busy;
+    $('verHelp').textContent = T('Новая версия проверяется при запуске и раз в 12 часов. Настройки и модели при обновлении сохраняются.',
+      'New versions are checked on startup and every 12 hours. Settings and models are kept when updating.');
     var upd = !!S.updVer;
     $('updNotice').classList.toggle('show', upd);
     if (upd) {
@@ -1401,13 +1447,17 @@
       b.classList.toggle('indet', progressFrac < 0);
       b.querySelector('i').style.width = progressFrac >= 0 ? Math.round(progressFrac * 100) + '%' : '';
     }
-    var up = $('updProg'), onU = active && progressWhat === 'update';
-    up.classList.toggle('show', onU);
-    if (onU) {
+    var onU = active && progressWhat === 'update';
+    ['updProg', 'updProg2'].forEach(function (id) {
+      var up = $(id);
+      up.classList.toggle('show', onU);
+      if (!onU) return;
       var ub = up.querySelector('.progress');
       ub.classList.toggle('indet', progressFrac < 0);
       ub.querySelector('i').style.width = progressFrac >= 0 ? Math.round(progressFrac * 100) + '%' : '';
-    }
+      var sm = up.querySelector('small');
+      if (sm) sm.textContent = progressFrac >= 0 ? Math.round(progressFrac * 100) + '% · ' + Math.round(progressMb) + T(' МБ', ' MB') : T('Подключаюсь…', 'Connecting…');
+    });
     if (!active) progressWhat = null;
   }
 
@@ -1437,7 +1487,7 @@
         models: [{ t: 'GigaAM v3, 220 МБ — рекомендую для русского', ok: true, mb: 220, giga: true },
                  { t: 'small, 190 МБ — для других языков и перевода', ok: true, mb: 190 }, { t: 'large-v3-turbo, 550 МБ — точнее', ok: false, mb: 550 },
                  { t: 'medium, 515 МБ', ok: false, mb: 515 }, { t: 'base, 60 МБ — быстрая, но хуже', ok: false, mb: 60 }],
-        model: 0, modelExists: true, mics: ['По умолчанию (как в Windows)', 'Микрофон (Realtek Audio)', 'Headset (USB Audio)'], mic: 0, micSource: 'direct', lang: 'ru', version: '1.1', speechLang: 'ru', translate: false, translateTo: 'en',
+        model: 0, modelExists: true, mics: ['По умолчанию (как в Windows)', 'Микрофон (Realtek Audio)', 'Headset (USB Audio)'], mic: 0, micSource: 'direct', lang: 'ru', version: '1.3', speechLang: 'ru', translate: false, translateTo: 'en',
         langs: [{ c: 'ru', n: 'Русский' }, { c: 'en', n: 'English' }, { c: 'uk', n: 'Українська' }, { c: 'de', n: 'Deutsch' }],
         engine: 'local', livePhrases: true, orHasKey: false, orKeyMask: '', orModel: 0, orModelName: 'Whisper Large V3 Turbo',
         orModels: [{ t: 'Whisper Large V3 Turbo — $0,012/ч', g: 1 }, { t: 'Whisper Large V3 — $0,027/ч', g: 1 }, { t: 'MAI-Transcribe 2 — $0,10/ч', g: 0 }],
@@ -1449,7 +1499,8 @@
       if (q.get('dark')) this.st.theme = 'dark';
       if (q.get('lang') === 'en') this.st.lang = 'en';
       if (q.get('nomodel')) { this.st.model = 2; this.st.modelExists = false; }
-      if (q.get('upd')) { this.st.updVer = '1.4'; this.st.updUrl = 'https://github.com/gemini1978v-beep/VoiceDictate/releases'; }
+      if (q.get('upd')) { this.st.updVer = '1.4'; this.st.updState = 'available'; this.st.updUrl = 'https://github.com/gemini1978v-beep/VoiceDictate/releases'; }
+      else this.st.updState = 'latest';
       if (q.get('text')) { this.st.autoSend = false; this.st.text = 'Привет! Это проверка распознавания речи. Если вы видите этот текст, всё работает.'; }
       if (q.get('busy')) { this.st.busy = true; this.st.status = 'Распознаю 0:04 записи…'; this.st.statusKind = 'busy'; }
       this.push();
