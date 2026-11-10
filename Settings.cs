@@ -42,12 +42,13 @@ namespace VoiceDictate
         }
         public bool UseGpu = true;            // видеокарта NVIDIA, если скачано ускорение
         public bool AutoSend = true;          // сразу отправлять распознанный текст
-        public bool PressEnter = false;
+        public bool PressEnter = true;        // Enter после вставки — сообщение сразу уходит
         public double EnterDelay = 0.2;       // секунд от вставки до Enter
         public bool TypeText = false;
         public bool LivePhrases = true;
-        public bool CheckUpdates = true;      // проверять новую версию на GitHub (при запуске и раз в 12 часов)       // GigaAM: вставлять каждую фразу после паузы, не дожидаясь конца записи
-        public bool TopMost = true;
+        public bool CheckUpdates = true;      // проверять новую версию на GitHub (при запуске и раз в 12 часов)
+        public string LastUpdateCheck = "";   // когда последний раз удалось проверить: дд-мм-гг чч:мм       // GigaAM: вставлять каждую фразу после паузы, не дожидаясь конца записи
+        public bool TopMost = false;
         public bool ClassicUi = false;        // ui = classic — старое окно вместо HTML-интерфейса
         public string Theme = "light";       // тема окна: light / dark
         public bool TrayHintShown = false;    // подсказку «работаю в трее» уже показывали
@@ -134,6 +135,9 @@ namespace VoiceDictate
                         case "type_text":
                             s.TypeText = ParseBool(val);
                             break;
+                        case "last_update_check":
+                            s.LastUpdateCheck = val.Trim();
+                            break;
                         case "check_updates":
                             s.CheckUpdates = ParseBool(val);
                             break;
@@ -219,6 +223,8 @@ namespace VoiceDictate
             sb.AppendLine("live_phrases = " + (LivePhrases ? "yes" : "no"));
             sb.AppendLine("; Проверять, не вышла ли новая версия (GitHub, при запуске и раз в 12 часов) (yes / no)");
             sb.AppendLine("check_updates = " + (CheckUpdates ? "yes" : "no"));
+            sb.AppendLine("; Когда последний раз проверяли новую версию (заполняет программа)");
+            sb.AppendLine("last_update_check = " + LastUpdateCheck);
             sb.AppendLine("; Окно программы поверх остальных (yes / no)");
             sb.AppendLine("topmost = " + (TopMost ? "yes" : "no"));
             sb.AppendLine("; Интерфейс: web — новый (нужен WebView2, есть в Windows 10/11), classic — старое окно");

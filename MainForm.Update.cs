@@ -59,6 +59,8 @@ namespace VoiceDictate
                 return false;
             }
             if (IsDisposed) return false;
+            settings.LastUpdateCheck = DateTime.Now.ToString("dd-MM-yy HH:mm");
+            SaveSettings();
             if (r == null)
             {
                 updState = "latest";
@@ -142,7 +144,8 @@ namespace VoiceDictate
             js.S("updVer", updRelease != null ? updRelease.Version : "")
               .S("updUrl", updRelease != null ? updRelease.PageUrl ?? "" : "")
               .B("updating", updating)
-              .S("updState", updState);
+              .S("updState", updState)
+              .S("updChecked", settings.LastUpdateCheck);
         }
     }
 }

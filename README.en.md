@@ -2,7 +2,7 @@
 
 [Русский](README.md) · **English**
 
-**Version 1.4** — [download](https://github.com/gemini1978v-beep/VoiceDictate/releases/latest) · [what's new](https://github.com/gemini1978v-beep/VoiceDictate/releases/tag/v1.4) · [website](https://gemini1978v-beep.github.io/VoiceDictate/)
+**Version 1.5** — [download](https://github.com/gemini1978v-beep/VoiceDictate/releases/latest) · [what's new](https://github.com/gemini1978v-beep/VoiceDictate/releases/tag/v1.5) · [website](https://gemini1978v-beep.github.io/VoiceDictate/)
 
 Press **F3**, say a phrase, press **F3** again, and the text is pasted wherever your cursor is:
 a chat, Notepad, a browser, Word, a messenger. Handles punctuation, works great with English,
@@ -272,11 +272,12 @@ How GigaAM differs from Whisper:
   The “Transcribe file” window still runs on your computer.
 - **Send recognized text right away** — when off, the text stays in the field,
   you can edit it and click “Send”.
-- **Press Enter after pasting + delay** — e.g. 0.2 s.
+- **Press Enter after pasting + delay** — e.g. 0.2 s. On by default: a chat message is sent right away.
 - **Type character by character** — if Ctrl+V does not work in the target window.
-- **Window always on top**.
+- **Window always on top** (off by default).
 - **Update check** — on startup and every 12 hours the program asks GitHub whether a new version
-  is out. To turn it off: `check_updates = no` in `settings.ini`.
+  is out. The date and time of the last check are shown in the main screen corner and in “About”.
+  To turn it off: `check_updates = no` in `settings.ini`.
 
 In `settings.ini` you can also change the Whisper prompt (`prompt` — sample text in the
 desired style, helps with punctuation).
