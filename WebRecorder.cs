@@ -63,6 +63,12 @@ namespace VoiceDictate
             }
         }
 
+        /// <summary>Звук, записанный с отсчёта from до текущего момента (запись продолжается).</summary>
+        public short[] Samples(long from)
+        {
+            return Recorder.Slice(pcm, from);
+        }
+
         /// <summary>Остановить запись и вернуть звук (16 кГц, моно, 16 бит).</summary>
         public async Task<short[]> Stop()
         {

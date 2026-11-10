@@ -668,6 +668,10 @@
               </div>
               <div class="help" id="modelHelp" data-en="GigaAM v3 by Sber: Russian only, adds punctuation by itself and runs on the CPU faster than Whisper. Translation is done by an OpenRouter model (needs a key); audio and video files are transcribed by Whisper.">GigaAM v3 от Сбера: только русский язык, сама ставит знаки препинания и работает на процессоре быстрее Whisper. Перевод — моделью OpenRouter (нужен ключ), файлы аудио и видео распознаёт Whisper.</div>
             </div>
+            <div class="opt" id="liveOpt">
+              <label class="switch"><input type="checkbox" id="livePhrases"><i></i></label>
+              <label class="lbl" for="livePhrases" data-en="Insert phrase by phrase&lt;small&gt;Each phrase is inserted right after a short pause, while recording goes on. The second press inserts the last one.&lt;/small&gt;">Вставлять по фразам<small>Каждая фраза вставляется сразу после короткой паузы, запись при этом продолжается. Второе нажатие вставляет последнюю.</small></label>
+            </div>
             <div class="opt" id="gpuOpt">
               <label class="switch"><input type="checkbox" id="gpu"><i></i></label>
               <label class="lbl" for="gpu" data-en="NVIDIA GPU (CUDA)&lt;small&gt;Use GPU acceleration for faster recognition.&lt;/small&gt;">Видеокарта NVIDIA (CUDA)<small>Использовать видеоускорение для более быстрой обработки.</small></label>
@@ -1074,7 +1078,7 @@
   $('testBtn').onclick = function () { send('test'); };
   $('orTestBtn').onclick = function () { send('test'); };
   $('cudaBtn').onclick = function () { progressWhat = 'cuda'; progressFrac = -1; send('cuda'); };
-  ['gpu', 'autoSend', 'enter', 'type', 'topmost'].forEach(function (id) {
+  ['gpu', 'livePhrases', 'autoSend', 'enter', 'type', 'topmost'].forEach(function (id) {
     $(id).onchange = function () { send(id, this.checked ? '1' : '0'); };
   });
 
@@ -1240,6 +1244,7 @@
     var noModel = !cloud && !S.modelExists;
     $('modelNotice').classList.toggle('show', noModel);
     $('modelHelp').style.display = giga ? '' : 'none';
+    $('liveOpt').style.display = giga ? '' : 'none';
     $('gpuOpt').style.display = giga ? 'none' : '';
     $('gpuExtra').style.display = giga ? 'none' : '';
     $('noticeSub').textContent = m ? m.t.split(' — ')[0] + T(' · нужно один раз, дальше без интернета', ' · needed once, then works offline') : T('Нужно один раз, дальше без интернета', 'Needed once, then works offline');
@@ -1313,6 +1318,8 @@
     ['srcLang', 'speechLang', 'trBtn', 'dstLang', 'trSel'].forEach(function (id) { $(id).disabled = !S.canDictate || rec; });
 
     $('gpu').checked = S.gpu;
+    $('livePhrases').checked = !!S.livePhrases;
+    $('livePhrases').disabled = rec;
     var cb = $('cudaBtn');
     cb.textContent = S.cuda ? T('Ускорение NVIDIA установлено ✓', 'NVIDIA acceleration installed ✓') : T('Скачать ускорение NVIDIA (~', 'Download NVIDIA acceleration (~') + S.cudaMb + T(' МБ)', ' MB)');
     cb.classList.toggle('ok', S.cuda);
@@ -1381,7 +1388,7 @@
                  { t: 'GigaAM v3, 220 МБ — только русский, быстрая и точная', ok: false, mb: 220, giga: true }],
         model: 0, modelExists: true, mics: ['По умолчанию (как в Windows)', 'Микрофон (Realtek Audio)', 'Headset (USB Audio)'], mic: 0, micSource: 'direct', lang: 'ru', version: '1.1', speechLang: 'ru', translate: false, translateTo: 'en',
         langs: [{ c: 'ru', n: 'Русский' }, { c: 'en', n: 'English' }, { c: 'uk', n: 'Українська' }, { c: 'de', n: 'Deutsch' }],
-        engine: 'local', orHasKey: false, orKeyMask: '', orModel: 0, orModelName: 'Whisper Large V3 Turbo',
+        engine: 'local', livePhrases: true, orHasKey: false, orKeyMask: '', orModel: 0, orModelName: 'Whisper Large V3 Turbo',
         orModels: [{ t: 'Whisper Large V3 Turbo — $0,012/ч', g: 1 }, { t: 'Whisper Large V3 — $0,027/ч', g: 1 }, { t: 'MAI-Transcribe 2 — $0,10/ч', g: 0 }],
         orBalance: '', orBalanceNote: '', orBalanceError: false,
         gpu: true, cuda: false, cudaMb: 640, theme: 'light', autoSend: true, enter: false, delay: 0.2, typeText: true, topmost: true, text: '',
@@ -1441,7 +1448,7 @@
         case 'orModel': s.orModel = +a; s.orModelName = s.orModels[+a].t.split(' — ')[0]; break;
         case 'orKey': s.orHasKey = true; s.orKeyMask = a.slice(0, 11) + '…' + a.slice(-4); s.orBalance = '$4,87'; s.orBalanceNote = 'Баланс аккаунта.'; break;
         case 'orBalance': break;
-        case 'gpu': case 'autoSend': case 'enter': s[c] = a === '1'; break;
+        case 'gpu': case 'livePhrases': case 'autoSend': case 'enter': s[c] = a === '1'; break;
         case 'type': s.typeText = a === '1'; break;
         case 'topmost': s.topmost = a === 'toggle' ? !s.topmost : a === '1'; break;
         case 'delay': s.delay = parseFloat(a); break;

@@ -45,6 +45,7 @@ namespace VoiceDictate
         public bool PressEnter = false;
         public double EnterDelay = 0.2;       // секунд от вставки до Enter
         public bool TypeText = false;
+        public bool LivePhrases = true;       // GigaAM: вставлять каждую фразу после паузы, не дожидаясь конца записи
         public bool TopMost = true;
         public bool ClassicUi = false;        // ui = classic — старое окно вместо HTML-интерфейса
         public string Theme = "light";       // тема окна: light / dark
@@ -132,6 +133,9 @@ namespace VoiceDictate
                         case "type_text":
                             s.TypeText = ParseBool(val);
                             break;
+                        case "live_phrases":
+                            s.LivePhrases = ParseBool(val);
+                            break;
                         case "topmost":
                             s.TopMost = ParseBool(val);
                             break;
@@ -207,6 +211,8 @@ namespace VoiceDictate
             sb.AppendLine("enter_delay = " + EnterDelay.ToString("0.##", CultureInfo.InvariantCulture));
             sb.AppendLine("; Печатать посимвольно вместо Ctrl+V (yes / no)");
             sb.AppendLine("type_text = " + (TypeText ? "yes" : "no"));
+            sb.AppendLine("; Модель GigaAM: вставлять текст по фразам — после каждой паузы, не дожидаясь второго нажатия (yes / no)");
+            sb.AppendLine("live_phrases = " + (LivePhrases ? "yes" : "no"));
             sb.AppendLine("; Окно программы поверх остальных (yes / no)");
             sb.AppendLine("topmost = " + (TopMost ? "yes" : "no"));
             sb.AppendLine("; Интерфейс: web — новый (нужен WebView2, есть в Windows 10/11), classic — старое окно");

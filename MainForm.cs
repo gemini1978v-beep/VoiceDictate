@@ -749,11 +749,12 @@ namespace VoiceDictate
                 micStarting = false;
             }
             webRecording = viaWeb;
+            LiveStart();   // MainForm.Live.cs
             recTimer.Start();
             SetRecording(true);
             string mic = viaWeb && !string.IsNullOrEmpty(webRecorder.DeviceName) ? webRecorder.DeviceName : cmbMic.Text;
             Log(L.T("Запись началась", "Recording started") + (viaBrowser ? L.T(" через браузер", " via browser") : viaWeb ? L.T(" через веб", " via web") : "") + " (" + mic + L.T("). Говорите, потом ", "). Speak, then press ") +
-                slotDictate.Saved + ".");
+                slotDictate.Saved + "." + (live != null ? L.T(" Фразы вставляются после каждой паузы.", " Phrases are inserted after each pause.") : ""));
         }
 
         /// <summary>Настройка «Запись звука»: direct / web / browser.</summary>
@@ -860,6 +861,7 @@ namespace VoiceDictate
                 }
                 level = recorder.LastLevel;
             }
+            LiveTick();
             barLevel.Value = Math.Max(0, Math.Min(100, (int)(Math.Sqrt(level) * 100)));
             WebLevel(level);
             UpdateStatus();
@@ -897,9 +899,13 @@ namespace VoiceDictate
             }
             webRecording = false;
             SetRecording(false);   // красный
+            PauseDetector det = live;
+            live = null;
 
             try
             {
+                if (det != null && await LiveFinish(det, samples)) return;   // MainForm.Live.cs
+
                 double sec = samples.Length / (double)Recorder.SampleRate;
                 if (sec < 0.3)
                 {
@@ -994,7 +1000,11 @@ namespace VoiceDictate
             }
         }
 
-        private async Task SendText()
+        /// <summary>
+        /// Вставить текст из поля в активное окно. final = false — очередная фраза посреди записи
+        /// (MainForm.Live.cs): без Enter и без лишних строк в журнале; lead — пробел перед ней.
+        /// </summary>
+        private async Task SendText(bool final = true, string lead = "")
         {
             string text = txtText.Text.Trim();
             if (text.Length == 0)
@@ -1002,8 +1012,9 @@ namespace VoiceDictate
                 Log(L.T("Отправлять нечего — поле пустое.", "Nothing to send — the field is empty."));
                 return;
             }
+            text = lead + text;
 
-            SetStatus(L.T("Отправляю…", "Sending…"), ColorAmber);
+            if (final) SetStatus(L.T("Отправляю…", "Sending…"), ColorAmber);
             await WaitKeysReleased(slotDictate.Key);
 
             IntPtr target = Native.GetForegroundWindow();
@@ -1022,7 +1033,7 @@ namespace VoiceDictate
             }
 
             SetClipboard(text);
-            Log(L.T("Отправляю в: ", "Sending to: ") + Native.GetTitle(target));
+            if (final || lead.Length == 0) Log(L.T("Отправляю в: ", "Sending to: ") + Native.GetTitle(target));
 
             if (settings.TypeText)
             {
@@ -1038,17 +1049,20 @@ namespace VoiceDictate
                 Native.SendChord(Native.VK_CONTROL, Native.VK_V);
             }
 
-            if (settings.PressEnter)
-            {
-                int ms = (int)Math.Round(settings.EnterDelay * 1000);
-                await Task.Delay(Math.Max(ms, 0));
-                Native.SendChord(Native.VK_RETURN);
-            }
+            if (settings.PressEnter && final) await PressEnterAfterDelay();
 
             txtText.Clear();
+            if (!final) return;
             Log(settings.PressEnter
                 ? L.T("Отправлено, Enter через ", "Sent, Enter after ") + settings.EnterDelay.ToString("0.##") + L.T(" с. Поле очищено.", " s. Field cleared.")
                 : L.T("Вставлено. Поле очищено.", "Pasted. Field cleared."));
+        }
+
+        private async Task PressEnterAfterDelay()
+        {
+            int ms = (int)Math.Round(settings.EnterDelay * 1000);
+            await Task.Delay(Math.Max(ms, 0));
+            Native.SendChord(Native.VK_RETURN);
         }
 
         // ================================================================ модель: скачать и проверить

@@ -194,6 +194,22 @@ namespace VoiceDictate
             Drain(true);
         }
 
+        /// <summary>Звук, записанный с отсчёта from до текущего момента (запись продолжается).</summary>
+        public short[] Samples(long from)
+        {
+            return Slice(pcm, from);
+        }
+
+        internal static short[] Slice(MemoryStream pcm, long from)
+        {
+            if (pcm == null) return new short[0];
+            long n = pcm.Length / 2 - from;
+            if (from < 0 || n <= 0) return new short[0];
+            var r = new short[n];
+            Buffer.BlockCopy(pcm.GetBuffer(), (int)(from * 2), r, 0, (int)(n * 2));
+            return r;
+        }
+
         /// <summary>Остановить запись и вернуть звук (16 кГц, моно, 16 бит).</summary>
         public short[] Stop()
         {

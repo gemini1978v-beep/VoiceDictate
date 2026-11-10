@@ -326,6 +326,7 @@ namespace VoiceDictate
                 .Raw("langs", LangsJson())
                 .N("mic", cmbMic.SelectedIndex)
                 .B("gpu", chkGpu.Checked)
+                .B("livePhrases", settings.LivePhrases)
                 .B("cuda", WhisperEngine.CudaInstalled)
                 .N("cudaMb", WhisperEngine.CudaSizeMb)
                 .B("autoSend", chkAutoSend.Checked)
@@ -483,6 +484,14 @@ namespace VoiceDictate
 
                 case "gpu":
                     chkGpu.Checked = arg == "1";
+                    break;
+                case "livePhrases":
+                    settings.LivePhrases = arg == "1";
+                    SaveSettings();
+                    Log(settings.LivePhrases
+                        ? L.T("GigaAM: текст вставляется по фразам — после каждой паузы.", "GigaAM: text is inserted phrase by phrase — after each pause.")
+                        : L.T("GigaAM: текст вставляется целиком после второго нажатия.", "GigaAM: text is inserted all at once after the second press."));
+                    WebPushState();
                     break;
                 case "autoSend":
                     chkAutoSend.Checked = arg == "1";
@@ -680,6 +689,7 @@ namespace VoiceDictate
             chkType.Checked = d.TypeText;
             chkTopMost.Checked = d.TopMost;
             settings.MicSource = d.MicSource;
+            settings.LivePhrases = d.LivePhrases;
             settings.Cloud = d.Cloud;   // ключ OpenRouter не стираем
             SaveSettings();
             if (cmbMic.Items.Count > 0) cmbMic.SelectedIndex = 0;
