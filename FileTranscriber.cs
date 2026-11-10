@@ -135,7 +135,27 @@ namespace VoiceDictate
         public static Task<Result> TranscribeAsync(string input, string modelPath, string language, string prompt,
             bool srt, Action<string, double> progress, CancellationToken ct)
         {
-            return Task.Run(() => Run(input, modelPath, language, prompt, srt, progress, ct));
+            return Task.Run(() =>
+            {
+                try
+                {
+                    return Run(input, modelPath, language, prompt, srt, progress, ct);
+                }
+                finally
+                {
+                    // копия звука может весить сотни МБ — не держим её до следующего файла
+                    try
+                    {
+                        string work = Path.Combine(WhisperEngine.WorkDir, "file");
+                        if (Directory.Exists(work))
+                            foreach (string f in Directory.GetFiles(work)) TryDelete(f);
+                    }
+                    catch
+                    {
+                        // не страшно
+                    }
+                }
+            });
         }
 
         private static Result Run(string input, string modelPath, string language, string prompt, bool srt,

@@ -59,9 +59,10 @@ or in the OpenRouter cloud (key, model with price per hour, balance).
    “More info” → “Run anyway” (the program is not code-signed).
 4. Click **RU/EN** at the top to switch the interface language if needed.
 5. Choose where to recognize speech:
-   - **on your computer** — open Settings (gear icon), click **“Download”** next to the model
-     (small, 190 MB, once), then **“Test”**. If you speak Russian, pick **GigaAM v3** (220 MB)
-     in the list: it is faster and more accurate and can insert text phrase by phrase;
+   - **on your computer** (selected by default) — open Settings (gear icon), click **“Download”**
+     next to the model (once), then **“Test”**. **GigaAM v3** (220 MB) is selected by default — the best
+     for Russian, it can insert text phrase by phrase. For other languages and translation into English
+     pick a Whisper model (small, 190 MB) in the same list;
    - **in the cloud** — in Settings, “Recognition” → “OpenRouter (cloud)”, paste your API key
      (the “Get a key” button), pick a model, click **“Test”**.
 6. In Settings, set **“Speech language”** to the language you speak.
@@ -91,6 +92,12 @@ One key — **F3** (you can change it in the window).
 
 If the program itself is active when sending, the text goes to the window
 you were in before.
+
+**Esc** while recording cancels it: the microphone turns off, the recording is discarded
+and nothing is pasted.
+
+The voice recording is kept only in the `temp` folder next to the program: each new
+recording overwrites the previous one, and the folder is cleared when the program closes.
 
 ### Phrase-by-phrase insertion (GigaAM model)
 

@@ -83,12 +83,12 @@ namespace VoiceDictate
         /// <summary>Модели, которые можно скачать из программы. Первая — рекомендуемая.</summary>
         public static readonly WhisperModel[] Known =
         {
-            new WhisperModel("ggml-small-q5_1.bin", "small, 190 МБ — рекомендую", "small, 190 MB — recommended", 190),
+            new WhisperModel(SherpaEngine.GigaAmDir, "GigaAM v3, 220 МБ — рекомендую для русского",
+                "GigaAM v3, 220 MB — recommended for Russian", 220, SherpaEngine.GigaAmFiles),
+            new WhisperModel("ggml-small-q5_1.bin", "small, 190 МБ — для других языков и перевода", "small, 190 MB — for other languages and translation", 190),
             new WhisperModel("ggml-large-v3-turbo-q5_0.bin", "large-v3-turbo, 550 МБ — точнее", "large-v3-turbo, 550 MB — more accurate", 550),
             new WhisperModel("ggml-medium-q5_0.bin", "medium, 515 МБ", "medium, 515 MB", 515),
             new WhisperModel("ggml-base-q5_1.bin", "base, 60 МБ — быстрая, но хуже", "base, 60 MB — fast but less accurate", 60),
-            new WhisperModel(SherpaEngine.GigaAmDir, "GigaAM v3, 220 МБ — только русский, быстрая и точная",
-                "GigaAM v3, 220 MB — Russian only, fast and accurate", 220, SherpaEngine.GigaAmFiles),
         };
 
         // Фразы, которые Whisper «придумывает» на тишине (научился на субтитрах)
@@ -183,6 +183,32 @@ namespace VoiceDictate
                     }
                 }
                 throw new IOException(L.T("не нашлось папки для временных файлов с путём латиницей", "no temp folder with a Latin-only path was found"));
+            }
+        }
+
+        /// <summary>
+        /// При закрытии программы: удалить записи голоса и прочие временные файлы (rec.wav, phrase.wav,
+        /// результаты whisper, копии файлов для распознавания).
+        /// </summary>
+        public static void CleanWorkDir()
+        {
+            string dir;
+            try
+            {
+                dir = WorkDir;
+            }
+            catch
+            {
+                return;
+            }
+            try
+            {
+                foreach (string f in Directory.GetFiles(dir, "*", SearchOption.AllDirectories)) TryDelete(f);
+                foreach (string d in Directory.GetDirectories(dir)) TryDeleteDir(d);
+            }
+            catch
+            {
+                // нет доступа — не страшно
             }
         }
 

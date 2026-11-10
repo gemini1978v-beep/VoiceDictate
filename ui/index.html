@@ -666,7 +666,8 @@
                 </div>
                 <div class="prog-wrap" id="modelProg"><div class="progress"><i></i></div><small></small></div>
               </div>
-              <div class="help" id="modelHelp" data-en="GigaAM v3 by Sber: Russian only, adds punctuation by itself and runs on the CPU faster than Whisper. Translation is done by an OpenRouter model (needs a key); audio and video files are transcribed by Whisper.">GigaAM v3 от Сбера: только русский язык, сама ставит знаки препинания и работает на процессоре быстрее Whisper. Перевод — моделью OpenRouter (нужен ключ), файлы аудио и видео распознаёт Whisper.</div>
+              <div class="help" id="whisperHelp" data-en="Whisper models understand many languages and translate into English by themselves. For Russian, GigaAM at the top of the list is faster and more accurate.">Модели Whisper понимают много языков и сами переводят на английский. Для русского быстрее и точнее GigaAM — она вверху списка.</div>
+              <div class="help" id="modelHelp" data-en="GigaAM v3 by Sber: Russian only, adds punctuation by itself and runs on the CPU faster than Whisper. It cannot translate by itself: only Whisper models translate (into English), or an OpenRouter model (needs a key). Audio and video files are transcribed by Whisper.">GigaAM v3 от Сбера: только русский язык, сама ставит знаки препинания и работает на процессоре быстрее Whisper. Переводить сама не умеет: переводят только модели Whisper (на английский) или модель OpenRouter (нужен ключ). Файлы аудио и видео распознаёт Whisper.</div>
             </div>
             <div class="opt" id="liveOpt">
               <label class="switch"><input type="checkbox" id="livePhrases"><i></i></label>
@@ -718,7 +719,7 @@
           <div class="row">
             <label for="trSel" data-en="Translate to">Перевести на</label>
             <select class="select" id="trSel"></select>
-            <div class="help local-only" data-en="Into English Whisper translates by itself, free. Other languages (and any language with GigaAM) are translated by a cheap OpenRouter model (~$0.0001 per phrase) and need an OpenRouter key.">На английский переводит сам Whisper, бесплатно. На другие языки (а с моделью GigaAM — на любой) — дешёвая модель OpenRouter (~$0,0001 за фразу), нужен ключ OpenRouter.</div>
+            <div class="help local-only" data-en="Only Whisper models translate by themselves — into English, free. Other languages, and any translation with GigaAM, use a cheap OpenRouter model (~$0.0001 per phrase) and need an OpenRouter key.">Сами переводят только модели Whisper — на английский, бесплатно. На другие языки, а с моделью GigaAM на любой, переводит дешёвая модель OpenRouter (~$0,0001 за фразу), нужен ключ OpenRouter.</div>
             <div class="help cloud-only" data-en="Into English Whisper translates by itself. Other languages are translated by a cheap OpenRouter model (~$0.0001 per phrase).">На английский переводит сам Whisper. На другие языки — дешёвая модель OpenRouter (~$0,0001 за фразу).</div>
           </div>
         </div>
@@ -1186,6 +1187,29 @@
     if (document.activeElement !== sel) sel.selectedIndex = index;
   }
 
+  // модели на компьютере: две группы — GigaAM (только русский, без перевода) и Whisper (переводит на английский)
+  function setLocalModels(sel, items, index) {
+    var sig = lang + JSON.stringify(items);
+    if (sel.getAttribute('data-sig') !== sig) {
+      sel.innerHTML = '';
+      var groups = {};
+      items.forEach(function (it) {
+        var g = it.giga ? 'giga' : 'whisper';
+        if (!groups[g]) {
+          groups[g] = document.createElement('optgroup');
+          groups[g].label = it.giga ? T('GigaAM — только русский, без перевода', 'GigaAM — Russian only, no translation')
+                                    : T('Whisper — много языков, переводит на английский', 'Whisper — many languages, translates to English');
+          sel.appendChild(groups[g]);
+        }
+        var o = document.createElement('option');
+        o.textContent = it.t + (it.ok ? '  ✓' : T('  — не скачана', '  — not downloaded'));
+        groups[g].appendChild(o);
+      });
+      sel.setAttribute('data-sig', sig);
+    }
+    if (sel.selectedIndex !== index) sel.selectedIndex = index;
+  }
+
   function setOptions(sel, items, index, key) {
     var sig = JSON.stringify(items);
     if (sel.getAttribute('data-sig') !== sig) {
@@ -1244,6 +1268,7 @@
     var noModel = !cloud && !S.modelExists;
     $('modelNotice').classList.toggle('show', noModel);
     $('modelHelp').style.display = giga ? '' : 'none';
+    $('whisperHelp').style.display = giga ? 'none' : '';
     $('liveOpt').style.display = giga ? '' : 'none';
     $('gpuOpt').style.display = giga ? 'none' : '';
     $('gpuExtra').style.display = giga ? 'none' : '';
@@ -1278,7 +1303,7 @@
     $('hotkeyHelp').classList.toggle('warn', changed);
     $('saveBtn').classList.toggle('pulse', changed);
 
-    setOptions($('model'), S.models, S.model, function (x) { return x.t + (x.ok ? '  ✓' : T('  — не скачана', '  — not downloaded')); });
+    setLocalModels($('model'), S.models, S.model);
     $('model').disabled = !S.canModel;
     var dl = $('dlBtn');
     dl.textContent = S.modelExists ? T('Скачана ✓', 'Downloaded ✓') : T('Скачать', 'Download');
@@ -1383,9 +1408,9 @@
       this.st = {
         type: 'state', hotkey: 'F3', hotkeyDraft: 'F3', recording: false, busy: false, downloading: false,
         recSeconds: 0, status: 'Готов. F3 — начать запись', statusKind: 'idle',
-        models: [{ t: 'small, 190 МБ — рекомендую', ok: true, mb: 190 }, { t: 'large-v3-turbo, 550 МБ — точнее', ok: false, mb: 550 },
-                 { t: 'medium, 515 МБ', ok: false, mb: 515 }, { t: 'base, 60 МБ — быстрая, но хуже', ok: false, mb: 60 },
-                 { t: 'GigaAM v3, 220 МБ — только русский, быстрая и точная', ok: false, mb: 220, giga: true }],
+        models: [{ t: 'GigaAM v3, 220 МБ — рекомендую для русского', ok: true, mb: 220, giga: true },
+                 { t: 'small, 190 МБ — для других языков и перевода', ok: true, mb: 190 }, { t: 'large-v3-turbo, 550 МБ — точнее', ok: false, mb: 550 },
+                 { t: 'medium, 515 МБ', ok: false, mb: 515 }, { t: 'base, 60 МБ — быстрая, но хуже', ok: false, mb: 60 }],
         model: 0, modelExists: true, mics: ['По умолчанию (как в Windows)', 'Микрофон (Realtek Audio)', 'Headset (USB Audio)'], mic: 0, micSource: 'direct', lang: 'ru', version: '1.1', speechLang: 'ru', translate: false, translateTo: 'en',
         langs: [{ c: 'ru', n: 'Русский' }, { c: 'en', n: 'English' }, { c: 'uk', n: 'Українська' }, { c: 'de', n: 'Deutsch' }],
         engine: 'local', livePhrases: true, orHasKey: false, orKeyMask: '', orModel: 0, orModelName: 'Whisper Large V3 Turbo',
@@ -1397,7 +1422,7 @@
       var q = new URLSearchParams(location.search);
       if (q.get('dark')) this.st.theme = 'dark';
       if (q.get('lang') === 'en') this.st.lang = 'en';
-      if (q.get('nomodel')) { this.st.model = 1; this.st.modelExists = false; }
+      if (q.get('nomodel')) { this.st.model = 2; this.st.modelExists = false; }
       if (q.get('text')) { this.st.autoSend = false; this.st.text = 'Привет! Это проверка распознавания речи. Если вы видите этот текст, всё работает.'; }
       if (q.get('busy')) { this.st.busy = true; this.st.status = 'Распознаю 0:04 записи…'; this.st.statusKind = 'busy'; }
       this.push();

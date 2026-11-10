@@ -15,6 +15,7 @@ namespace VoiceDictate
         private Task liveChain = Task.CompletedTask;    // фразы распознаются и вставляются строго по очереди
         private int liveInserted;                       // сколько фраз уже вставлено за эту запись
         private string liveLast = "";                   // последняя вставленная фраза
+        private int recordGen;                          // растёт при отмене записи (Esc): старые фразы не вставляем
 
         private bool LiveMode
         {
@@ -69,6 +70,7 @@ namespace VoiceDictate
         /// <summary>Распознать фразу (после предыдущей) и вставить. true — что-то вставили.</summary>
         private async Task<bool> LivePhrase(Task before, short[] samples, bool final)
         {
+            int gen = recordGen;
             try
             {
                 await before;
@@ -87,7 +89,7 @@ namespace VoiceDictate
                     Log(L.T("Ошибка распознавания фразы: ", "Phrase recognition error: ") + res.Error);
                     return false;
                 }
-                if (res.Text.Length == 0 || IsDisposed) return false;
+                if (res.Text.Length == 0 || IsDisposed || gen != recordGen) return false;
                 string text = ContinueSentence(liveLast, res.Text);
                 liveLast = text;
                 Log(L.T("Фраза за ", "Phrase in ") + res.Seconds.ToString("0.0") + L.T(" с: ", " s: ") + text);

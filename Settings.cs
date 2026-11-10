@@ -12,7 +12,7 @@ namespace VoiceDictate
             "Привет. Это текст на русском языке, с правильной пунктуацией: запятыми, точками и вопросами?";
 
         public string HotkeyDictate = "F3";   // 1-е нажатие — запись, 2-е — распознать и отправить
-        public string Model = "ggml-small-q5_1.bin";
+        public string Model = SherpaEngine.GigaAmDir;   // по умолчанию GigaAM: быстрее и точнее для русского
         public bool Cloud = false;            // engine = openrouter — распознавать в облаке OpenRouter (платно)
         public string OpenRouterKey = "";     // ключ API OpenRouter (sk-or-v1-…)
         public string OpenRouterModel = OpenRouter.DefaultModel;
@@ -21,7 +21,7 @@ namespace VoiceDictate
         public const string DefaultPromptEn =
             "Hello. This is text in English, with correct punctuation: commas, periods, and questions?";
 
-        public string UiLang;                 // ui_lang = ru / en — язык окна; по умолчанию как у Windows
+        public string UiLang;                 // ui_lang = ru / en — язык окна; по умолчанию русский
         public string Language;               // язык речи; по умолчанию ru для русского окна, иначе auto
         public string Prompt = DefaultPrompt;
         public bool Translate = false;        // translate = yes — переводить распознанный текст
@@ -164,7 +164,7 @@ namespace VoiceDictate
 
         private Settings WithDefaults()
         {
-            if (UiLang != "ru" && UiLang != "en") UiLang = L.SystemDefault();
+            if (UiLang != "ru" && UiLang != "en") UiLang = "ru";
             if (string.IsNullOrEmpty(Language)) Language = UiLang == "ru" ? "ru" : "auto";
             if (string.IsNullOrEmpty(TranslateTo)) TranslateTo = Language == "en" ? "ru" : "en";
             return this;
@@ -179,7 +179,7 @@ namespace VoiceDictate
             sb.AppendLine("ui_lang = " + UiLang);
             sb.AppendLine("; Клавиша: 1-е нажатие — запись с микрофона, 2-е — распознать (Whisper) и отправить");
             sb.AppendLine("hotkey_dictate = " + HotkeyDictate);
-            sb.AppendLine("; Файл модели Whisper в папке models");
+            sb.AppendLine("; Модель в папке models: gigaam-v3-ru (GigaAM, только русский) или файл Whisper (ggml-….bin)");
             sb.AppendLine("model = " + Model);
             sb.AppendLine("; Где распознавать: local — на компьютере (Whisper, бесплатно), openrouter — в облаке OpenRouter (платно)");
             sb.AppendLine("engine = " + (Cloud ? "openrouter" : "local"));

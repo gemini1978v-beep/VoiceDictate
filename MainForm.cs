@@ -20,6 +20,7 @@ namespace VoiceDictate
     internal sealed partial class MainForm : Form
     {
         private const int ID_DICTATE = 0x5A12;
+        private const int ID_CANCEL = 0x5A13;     // Esc во время записи — отменить её
         private const int ERROR_HOTKEY_ALREADY_REGISTERED = 1409;
 
         private static readonly Color ColorGreen = Color.FromArgb(40, 150, 40);
@@ -139,6 +140,7 @@ namespace VoiceDictate
 
             Shown += (s, e) =>
             {
+                WhisperEngine.CleanWorkDir();   // если в прошлый раз программу закрыли аварийно
                 fgTimer.Start();
                 RegisterOrLog(slotDictate, L.T("записи", "for recording"));
                 UpdateStatus();
@@ -217,7 +219,7 @@ namespace VoiceDictate
 
             // Модель
             var rowModel = MakeFlow();
-            rowModel.Controls.Add(MakeRowLabel(L.T("Модель Whisper:", "Whisper model:")));
+            rowModel.Controls.Add(MakeRowLabel(L.T("Модель:", "Model:")));
             cmbModel.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbModel.Width = 300;
             cmbModel.DropDownWidth = 360;
@@ -545,7 +547,18 @@ namespace VoiceDictate
             lblLed.Text = on ? L.T("идёт запись", "recording") : L.T("ожидание", "idle");
             lblLed.ForeColor = on ? Color.FromArgb(30, 150, 50) : ColorRed;
             if (!on) barLevel.Value = 0;
+            SetCancelKey(on);
             UpdateStatus();
+        }
+
+        /// <summary>Esc ловим только пока идёт запись, чтобы в остальное время он работал в других программах.</summary>
+        private void SetCancelKey(bool on)
+        {
+            if (!IsHandleCreated) return;
+            if (on && slotDictate.Key != Keys.Escape)
+                Native.RegisterHotKey(Handle, ID_CANCEL, HotkeyUtil.MOD_NOREPEAT, (uint)Keys.Escape);
+            else
+                Native.UnregisterHotKey(Handle, ID_CANCEL);
         }
 
         private void UpdateStatus()
@@ -572,7 +585,7 @@ namespace VoiceDictate
             cmbMic.Enabled = !recording;
             if (busy || downloading) return;
             if (recording)
-                SetStatus(L.T("Идёт запись ", "Recording ") + FormatTime(RecSeconds) + ". " + k + L.T(" — распознать и отправить", " — recognize and send"),
+                SetStatus(L.T("Идёт запись ", "Recording ") + FormatTime(RecSeconds) + ". " + k + L.T(" — распознать и отправить, Esc — отмена", " — recognize and send, Esc — cancel"),
                     ColorGreen);
             else
                 SetStatus(L.T("Готов. ", "Ready. ") + k + L.T(" — начать запись", " — start recording"), ColorGray);
@@ -667,6 +680,11 @@ namespace VoiceDictate
             if (m.Msg == Native.WM_HOTKEY && m.WParam.ToInt32() == ID_DICTATE)
             {
                 Toggle();
+                return;
+            }
+            if (m.Msg == Native.WM_HOTKEY && m.WParam.ToInt32() == ID_CANCEL)
+            {
+                CancelRecording();
                 return;
             }
             base.WndProc(ref m);
@@ -865,6 +883,34 @@ namespace VoiceDictate
             barLevel.Value = Math.Max(0, Math.Min(100, (int)(Math.Sqrt(level) * 100)));
             WebLevel(level);
             UpdateStatus();
+        }
+
+        /// <summary>Esc: выключить микрофон и выбросить запись, ничего не распознавая и не вставляя.</summary>
+        private async void CancelRecording()
+        {
+            if (!recording || busy) return;
+            busy = true;
+            recordGen++;   // фразы, которые ещё распознаются, не вставятся (MainForm.Live.cs)
+            recTimer.Stop();
+            live = null;
+            try
+            {
+                if (webRecording) await webRecorder.Stop();
+                else recorder.Stop();
+            }
+            catch (Exception ex)
+            {
+                Log(L.T("Ошибка при остановке записи: ", "Error while stopping recording: ") + ex.Message);
+            }
+            finally
+            {
+                webRecording = false;
+                busy = false;
+                SetRecording(false);
+            }
+            Log(liveInserted > 0
+                ? L.T("Запись отменена (Esc). Уже вставленные фразы остались, остальное выброшено.", "Recording cancelled (Esc). Phrases already inserted stay, the rest is discarded.")
+                : L.T("Запись отменена (Esc), ничего не вставлено.", "Recording cancelled (Esc), nothing inserted."));
         }
 
         // ---------------------------------------------------------------- 2-е нажатие: распознать и отправить

@@ -86,6 +86,8 @@ namespace VoiceDictate
                 if (showWait != null) showWait.Unregister(null);
                 tray.Visible = false;
                 tray.Dispose();
+                SherpaEngine.Unload();
+                WhisperEngine.CleanWorkDir();   // записи голоса и временные файлы не оставляем
             };
 
             // Повторный запуск программы (второй exe) просит показать окно этой копии
