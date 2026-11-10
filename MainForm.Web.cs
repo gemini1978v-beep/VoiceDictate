@@ -123,7 +123,7 @@ namespace VoiceDictate
         /// <summary>Цвет окна до загрузки страницы — чтобы не мигало белым в тёмной теме.</summary>
         private Color ThemeBackColor()
         {
-            return DarkTheme ? Color.FromArgb(21, 23, 28) : Color.White;
+            return DarkTheme ? Color.FromArgb(36, 38, 44) : Color.White;   // = --bg тёмной темы в ui\index.html
         }
 
         /// <summary>Окно под тему: фон и (Windows 11) тёмная рамка.</summary>

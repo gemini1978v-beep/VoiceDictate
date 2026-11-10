@@ -80,7 +80,7 @@ namespace VoiceDictate
 
         public static Color BackColor(bool dark)
         {
-            return dark ? Color.FromArgb(21, 23, 28) : Color.White;
+            return dark ? Color.FromArgb(36, 38, 44) : Color.White;
         }
 
         [DllImport("dwmapi.dll")]
