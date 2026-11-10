@@ -556,7 +556,7 @@ namespace VoiceDictate
                 case "copyLog":
                     var sb = new StringBuilder();
                     foreach (string[] l in logHistory) sb.Append(l[0]).Append("  ").Append(l[1]).AppendLine();
-                    if (sb.Length > 0) SetClipboard(sb.ToString());
+                    if (sb.Length > 0) { var _ = SetClipboard(sb.ToString()); }
                     break;
                 case "folder":
                     try

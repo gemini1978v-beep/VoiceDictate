@@ -1078,7 +1078,7 @@ namespace VoiceDictate
                 await Task.Delay(250);
             }
 
-            SetClipboard(text);
+            await SetClipboard(text);
             if (final || lead.Length == 0) Log(L.T("Отправляю в: ", "Sending to: ") + Native.GetTitle(target));
 
             if (settings.TypeText)
@@ -1092,7 +1092,10 @@ namespace VoiceDictate
             }
             else
             {
+                await Task.Delay(30);
                 Native.SendChord(Native.VK_CONTROL, Native.VK_V);
+                // окно читает буфер не сразу: не меняем его (следующей фразой), пока вставка не прошла
+                await Task.Delay(150);
             }
 
             if (settings.PressEnter && final) await PressEnterAfterDelay();
@@ -1310,8 +1313,14 @@ namespace VoiceDictate
             }
         }
 
-        private void SetClipboard(string text)
+        /// <summary>Положить текст в буфер (только Unicode, см. Native.SetClipboardText). Буфер бывает занят — пробуем несколько раз.</summary>
+        private async Task SetClipboard(string text)
         {
+            for (int i = 0; i < 20; i++)
+            {
+                if (Native.SetClipboardText(Handle, text)) return;
+                await Task.Delay(25);
+            }
             try
             {
                 Clipboard.SetDataObject(text, true, 10, 50);

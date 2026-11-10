@@ -160,6 +160,72 @@ namespace VoiceDictate
             Send(inputs);
         }
 
+        // ---------------- буфер обмена
+
+        private const uint CF_UNICODETEXT = 13;
+        private const uint GMEM_MOVEABLE = 0x0002;
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool OpenClipboard(IntPtr hWndNewOwner);
+
+        [DllImport("user32.dll")]
+        private static extern bool CloseClipboard();
+
+        [DllImport("user32.dll")]
+        private static extern bool EmptyClipboard();
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr SetClipboardData(uint uFormat, IntPtr hMem);
+
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GlobalAlloc(uint uFlags, UIntPtr dwBytes);
+
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GlobalLock(IntPtr hMem);
+
+        [DllImport("kernel32.dll")]
+        private static extern bool GlobalUnlock(IntPtr hMem);
+
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GlobalFree(IntPtr hMem);
+
+        /// <summary>
+        /// Положить в буфер только Unicode-текст, сразу и целиком. Стандартный Clipboard.SetDataObject
+        /// кладёт ещё и копию в кодировке Windows (1251) и отдаёт данные с задержкой; программа, которая
+        /// в этот момент вставляет и читает эту копию как UTF-8, получает «���» вместо русских букв.
+        /// false — буфер занят другой программой, повторите чуть позже.
+        /// </summary>
+        public static bool SetClipboardText(IntPtr owner, string text)
+        {
+            if (!OpenClipboard(owner)) return false;
+            try
+            {
+                EmptyClipboard();
+                int bytes = (text.Length + 1) * 2;
+                IntPtr h = GlobalAlloc(GMEM_MOVEABLE, (UIntPtr)bytes);
+                if (h == IntPtr.Zero) return false;
+                IntPtr p = GlobalLock(h);
+                if (p == IntPtr.Zero)
+                {
+                    GlobalFree(h);
+                    return false;
+                }
+                Marshal.Copy(text.ToCharArray(), 0, p, text.Length);
+                Marshal.WriteInt16(p, text.Length * 2, 0);
+                GlobalUnlock(h);
+                if (SetClipboardData(CF_UNICODETEXT, h) == IntPtr.Zero)
+                {
+                    GlobalFree(h);   // буфер не взял память — освобождаем сами
+                    return false;
+                }
+                return true;
+            }
+            finally
+            {
+                CloseClipboard();
+            }
+        }
+
         /// <summary>Напечатать один символ как Unicode (не зависит от раскладки).</summary>
         public static void TypeChar(char c)
         {
