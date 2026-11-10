@@ -12,6 +12,11 @@ Russian and many other languages.
 
 - **Recognition on your computer** with Whisper (whisper.cpp): free, offline,
   your audio never leaves the PC. NVIDIA GPU acceleration is supported.
+- **GigaAM v3 model by Sber** for Russian speech (via [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx)):
+  also local and offline, adds punctuation by itself, recognizes a phrase in a fraction
+  of a second on an ordinary CPU.
+- **Phrase-by-phrase insertion** (with GigaAM): keep talking — after each short pause the phrase
+  appears in the window right away while recording goes on.
 - **Recognition in the cloud** via [OpenRouter](https://openrouter.ai), if your PC is slow
   or you want a more accurate model. The app shows models with their price per hour of audio
   (from ~$0.012/h for Whisper Large V3 Turbo) and your balance.
@@ -35,7 +40,7 @@ Windows voice typing (Win+H) is not needed, so everything works on **Windows 10*
   <img src="docs/screenshots/main-dark.png" width="260" alt="Main window in Russian">
 </p>
 
-Settings show only the selected mode: on your computer (Whisper model, NVIDIA GPU)
+Settings show only the selected mode: on your computer (Whisper or GigaAM model, NVIDIA GPU)
 or in the OpenRouter cloud (key, model with price per hour, balance).
 
 <p>
@@ -55,7 +60,8 @@ or in the OpenRouter cloud (key, model with price per hour, balance).
 4. Click **RU/EN** at the top to switch the interface language if needed.
 5. Choose where to recognize speech:
    - **on your computer** — open Settings (gear icon), click **“Download”** next to the model
-     (small, 190 MB, once), then **“Test”**;
+     (small, 190 MB, once), then **“Test”**. If you speak Russian, pick **GigaAM v3** (220 MB)
+     in the list: it is faster and more accurate and can insert text phrase by phrase;
    - **in the cloud** — in Settings, “Recognition” → “OpenRouter (cloud)”, paste your API key
      (the “Get a key” button), pick a model, click **“Test”**.
 6. In Settings, set **“Speech language”** to the language you speak.
@@ -85,6 +91,18 @@ One key — **F3** (you can change it in the window).
 
 If the program itself is active when sending, the text goes to the window
 you were in before.
+
+### Phrase-by-phrase insertion (GigaAM model)
+
+With the GigaAM model you do not have to wait for the second press: keep talking,
+and after each pause of about 0.6 s the phrase is recognized and pasted into the window
+right away while recording goes on. The second **F3** press inserts the last phrase
+and stops recording. If “Press Enter” is on, Enter is pressed once at the end —
+a messenger gets a single message.
+
+A phrase goes to the window that is active at the moment of the pause, so do not
+switch windows while dictating. To turn it off, clear “Insert phrase by phrase”
+in Settings (`live_phrases = no` in `settings.ini`).
 
 ## Interface
 
@@ -172,6 +190,9 @@ while a file is being transcribed.
   - large-v3-turbo (more accurate, slower): https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q5_0.bin
   - if huggingface.co does not open — the same files are on hf-mirror.com
     (replace `huggingface.co` with `hf-mirror.com` in the link).
+  - GigaAM v3: put `encoder.int8.onnx`, `decoder.onnx`, `joiner.onnx`, `tokens.txt` from
+    https://huggingface.co/csukuangfj/sherpa-onnx-nemo-transducer-punct-giga-am-v3-russian-2025-12-16/tree/main
+    into the `dist\models\gigaam-v3-ru\` folder.
 
   Then restart the program — the model appears in the list with a check mark.
 
@@ -183,9 +204,17 @@ while a file is being transcribed.
 | **small** | 190 MB | good — **start with this one** |
 | medium | 515 MB | better, slower |
 | large-v3-turbo | 550 MB | best, 2–3 times slower than small |
+| **GigaAM v3** | 220 MB | Russian only; more accurate and much faster than Whisper on a CPU, adds punctuation by itself |
 
 The log shows how many seconds recognition takes. If small gets words wrong,
-try large-v3-turbo.
+try large-v3-turbo or, for Russian speech, GigaAM.
+
+How GigaAM differs from Whisper:
+- it understands **Russian only** — other languages need Whisper;
+- it does not translate into English by itself: with GigaAM, translation is done by an OpenRouter model (needs a key);
+- it does not need a GPU; the model stays in memory for 5 minutes after recognition, then frees it;
+- audio and video files are still transcribed by Whisper;
+- it can insert text phrase by phrase while you are still recording.
 
 ## Troubleshooting on Windows 10
 
@@ -222,7 +251,9 @@ try large-v3-turbo.
 - **Translate to** — translate the recognized text into the selected language (same as the button on the
   main screen). Whisper translates into English; other languages use an OpenRouter model and need a key.
   In `settings.ini`: `translate = yes / no`, `translate_to`, `translate_model` (default `openai/gpt-4o-mini`).
-- **Recognition** — “On this computer (Whisper)”, free and offline, or “OpenRouter (cloud)”:
+- **Insert phrase by phrase** (GigaAM only) — paste each phrase after a pause without waiting
+  for the second press. In `settings.ini`: `live_phrases = yes / no`.
+- **Recognition** — “On this computer” (Whisper or GigaAM), free and offline, or “OpenRouter (cloud)”:
   the recording is sent to a cloud model via [OpenRouter](https://openrouter.ai) and paid from
   your OpenRouter balance per second of audio. An API key is required (the “Get a key” button).
   Models and prices per hour come from OpenRouter, cheapest first. OpenRouter shows the account
@@ -263,6 +294,8 @@ put the files from its `Release` folder into `dist\whisper-cuda`, and copy `*.dl
 - `whisper\` — whisper.cpp 1.9.2 for Windows x64 (MIT license,
   `LICENSE-whisper.cpp.txt`), Visual C++ Runtime libraries
   and the test recording `test-ru.wav`.
+- [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) (Apache 2.0) with ONNX Runtime (MIT) — for the
+  [GigaAM](https://github.com/salute-developers/GigaAM) model (MIT); the model itself is downloaded with the “Download” button.
 - Microphone recording uses the standard WinAPI (winmm), no third-party libraries.
 
 ## For developers
@@ -272,7 +305,8 @@ put the files from its `Release` folder into `dist\whisper-cuda`, and copy `*.dl
 - `MainForm*.cs` — main window and logic: recording, recognition, pasting text, tray.
 - `Recorder.cs` — WinAPI recording; `WebRecorder.cs` — recording through the window page;
   `BrowserMic.cs` + `ui\mic.html` — recording through a browser tab (server on 127.0.0.1:47811 only).
-- `WhisperEngine.cs` — runs whisper.cpp and downloads models; `OpenRouter.cs` — cloud
+- `WhisperEngine.cs` — runs whisper.cpp and downloads models; `SherpaEngine.cs` — the GigaAM model
+  via sherpa-onnx; `MainForm.Live.cs` — pause detection and phrase-by-phrase insertion; `OpenRouter.cs` — cloud
   recognition, model list with prices, balance.
 - `FileForm.cs`, `FileTranscriber.cs`, `ui\files.html` — the “Transcribe file” window.
 - `ui\index.html` — the main window interface; opened directly in a browser, it runs in demo mode.
@@ -283,4 +317,5 @@ put the files from its `Release` folder into `dist\whisper-cuda`, and copy `*.dl
 ## License
 
 [MIT](LICENSE) — free to use, modify and distribute as long as the copyright notice is kept.
-whisper.cpp in the `whisper\` folder is MIT-licensed too (`whisper\LICENSE-whisper.cpp.txt`).
+whisper.cpp in the `whisper\` folder is MIT-licensed too (`whisper\LICENSE-whisper.cpp.txt`),
+sherpa-onnx is Apache 2.0, the GigaAM model is MIT.

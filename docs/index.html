@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>VoiceDictate — free voice typing and translator for Windows 10 and 11 (Whisper, OpenRouter)</title>
-<meta name="description" content="Free voice typing and voice translator for Windows 10/11: press F3, speak, and the text or its translation is pasted into any app. Offline Whisper speech recognition or cheap OpenRouter cloud models from $0.012 per hour. English and Russian.">
-<meta name="keywords" content="voice typing windows, voice translator windows, speech translation, speech to text windows 10, dictation software, whisper windows, offline speech recognition, openrouter transcription">
+<title>VoiceDictate — free voice typing and translator for Windows 10 and 11 (Whisper, GigaAM, OpenRouter)</title>
+<meta name="description" content="Free voice typing and voice translator for Windows 10/11: press F3, speak, and the text or its translation is pasted into any app. Offline speech recognition (Whisper, or GigaAM for Russian with phrase-by-phrase typing as you speak) or cheap OpenRouter cloud models from $0.012 per hour. English and Russian.">
+<meta name="keywords" content="voice typing windows, voice translator windows, speech translation, speech to text windows 10, dictation software, whisper windows, gigaam, russian speech recognition, offline speech recognition, openrouter transcription">
 <link rel="canonical" href="https://gemini1978v-beep.github.io/VoiceDictate/">
 <link rel="alternate" hreflang="en" href="https://gemini1978v-beep.github.io/VoiceDictate/">
 <link rel="alternate" hreflang="ru" href="https://gemini1978v-beep.github.io/VoiceDictate/ru/">
 <link rel="alternate" hreflang="x-default" href="https://gemini1978v-beep.github.io/VoiceDictate/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="VoiceDictate — voice typing for Windows">
-<meta property="og:description" content="Press F3, speak, and the text appears in any app. Offline Whisper or OpenRouter cloud.">
+<meta property="og:description" content="Press F3, speak, and the text appears in any app. Offline Whisper or GigaAM, or OpenRouter cloud.">
 <meta property="og:url" content="https://gemini1978v-beep.github.io/VoiceDictate/">
 <meta property="og:image" content="https://gemini1978v-beep.github.io/VoiceDictate/screenshots/en/main-dark.png">
 <meta property="og:locale" content="en_US">
@@ -28,7 +28,7 @@
   "operatingSystem": "Windows 10, Windows 11",
   "applicationCategory": "UtilitiesApplication",
   "softwareVersion": "1.2",
-  "description": "Voice typing for Windows: press F3, speak, and the text is pasted into the active window. Offline Whisper or OpenRouter cloud recognition.",
+  "description": "Voice typing for Windows: press F3, speak, and the text is pasted into the active window. Offline Whisper or GigaAM, or OpenRouter cloud recognition.",
   "url": "https://gemini1978v-beep.github.io/VoiceDictate/",
   "downloadUrl": "https://github.com/gemini1978v-beep/VoiceDictate/releases/latest",
   "screenshot": "https://gemini1978v-beep.github.io/VoiceDictate/screenshots/en/main-dark.png",
@@ -85,7 +85,7 @@
         <div class="card">
           <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div>
           <h3>Offline on your PC</h3>
-          <p>Whisper (whisper.cpp) runs locally: free, no internet, your voice never leaves the computer. NVIDIA GPU acceleration.</p>
+          <p>Whisper (whisper.cpp) and Sber’s GigaAM run locally: free, no internet, your voice never leaves the computer. GigaAM adds punctuation and recognizes a Russian phrase in a fraction of a second; Whisper has NVIDIA GPU acceleration.</p>
         </div>
         <div class="card">
           <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.5-9 6 6 0 0 1 11.6 1.6A3.8 3.8 0 0 1 17.5 18z"/></svg></div>
@@ -109,8 +109,8 @@
         </div>
         <div class="card">
           <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h10M4 17h7"/></svg></div>
-          <h3>Stays out of the way</h3>
-          <p>Lives in the tray, configurable hotkey, light and dark themes. Works on Windows 10 without Win+H.</p>
+          <h3>Types as you speak</h3>
+          <p>With the GigaAM model each phrase is pasted right after a short pause — no need to wait for the end of the recording. Lives in the tray, works on Windows 10 without Win+H.</p>
         </div>
       </div>
     </div>
@@ -135,7 +135,7 @@
       <ol class="steps">
         <li><a href="https://github.com/gemini1978v-beep/VoiceDictate/releases/latest">Download <b>VoiceDictate-win-x64.zip</b></a> and unpack it to a folder with Latin letters only, e.g. <code>C:\VoiceDictate</code>.</li>
         <li>Run <b>VoiceDictate.exe</b>. If Windows shows “Windows protected your PC”, click “More info” → “Run anyway” (the app is not code-signed).</li>
-        <li>Open Settings (gear icon) and choose where to recognize speech: <b>on your computer</b> — click “Download” for the model (190 MB, once), or <b>OpenRouter</b> — paste your API key.</li>
+        <li>Open Settings (gear icon) and choose where to recognize speech: <b>on your computer</b> — click “Download” for the model (190 MB, once; for Russian speech, GigaAM v3, 220 MB, is better), or <b>OpenRouter</b> — paste your API key.</li>
         <li>Set the <b>speech language</b>, click into any text field, press <kbd>F3</kbd>, speak, press <kbd>F3</kbd> again.</li>
       </ol>
     </div>
@@ -164,7 +164,8 @@
     <div class="wrap">
       <h2>FAQ</h2>
       <details><summary>Is it free?</summary><p>Yes. The program is free and open source (MIT). Local recognition with Whisper costs nothing. Only the optional OpenRouter cloud is paid, from your own OpenRouter balance.</p></details>
-      <details><summary>Does it work offline?</summary><p>Yes, with “On this computer (Whisper)” recognition. The model is downloaded once (190–550 MB).</p></details>
+      <details><summary>Does it work offline?</summary><p>Yes, with “On this computer” recognition using a Whisper or GigaAM model. The model is downloaded once (190–550 MB).</p></details>
+      <details><summary>What is GigaAM and how is it better than Whisper?</summary><p>GigaAM v3 is an open Russian speech recognition model by Sber (MIT license). On an ordinary CPU it recognizes a phrase in a fraction of a second, adds punctuation by itself and can paste text phrase by phrase while you are still recording. It understands Russian only: for other languages, built-in translation into English and file transcription the program uses Whisper.</p></details>
       <details><summary>The volume bar does not move — what to do?</summary><p>Check Windows Settings → Privacy → Microphone. If a corporate antivirus blocks the microphone, choose “Audio capture: via browser” in the settings.</p></details>
       <details><summary>Which Windows versions are supported?</summary><p>Windows 10 and Windows 11, 64-bit.</p></details>
     </div>
