@@ -135,7 +135,7 @@ namespace VoiceDictate
 
                     if (method == "GET" && (path == "/" || path == "/mic.html"))
                     {
-                        await Reply(ns, 200, "text/html; charset=utf-8", WebUi.LoadHtml("mic.html", false));
+                        await Reply(ns, 200, "text/html; charset=utf-8", WebUi.LoadHtml("mic.html", "light"));
                     }
                     else if (method == "GET" && path == "/poll")
                     {

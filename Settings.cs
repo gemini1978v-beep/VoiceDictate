@@ -50,7 +50,8 @@ namespace VoiceDictate
         public string LastUpdateCheck = "";   // когда последний раз удалось проверить: дд-мм-гг чч:мм       // GigaAM: вставлять каждую фразу после паузы, не дожидаясь конца записи
         public bool TopMost = false;
         public bool ClassicUi = false;        // ui = classic — старое окно вместо HTML-интерфейса
-        public string Theme = "light";       // тема окна: light / dark
+        public string Theme = "light";       // тема окна: light — «Белый», obsidian — «Обсидиан», graphite — «Графит айс»
+        public int Glass = 50;                // прозрачность стеклянных панелей, 0..100
         public bool TrayHintShown = false;    // подсказку «работаю в трее» уже показывали
         public bool FileSrt = false;          // распознавание файлов: ещё и субтитры .srt
 
@@ -154,7 +155,11 @@ namespace VoiceDictate
                             s.TrayHintShown = ParseBool(val);
                             break;
                         case "theme":
-                            s.Theme = val.Trim().ToLowerInvariant() == "dark" ? "dark" : "light";
+                            s.Theme = ThemeId(val);
+                            break;
+                        case "glass":
+                            int g;
+                            if (int.TryParse(val.Trim(), out g)) s.Glass = Math.Max(0, Math.Min(100, g));
                             break;
                         case "ui":
                             s.ClassicUi = val.Trim().ToLowerInvariant() == "classic";
@@ -168,6 +173,14 @@ namespace VoiceDictate
                 // битый файл — работаем на значениях по умолчанию
             }
             return s.WithDefaults();
+        }
+
+        /// <summary>Тема из settings.ini; dark от старых версий — это «Графит айс».</summary>
+        public static string ThemeId(string v)
+        {
+            v = (v ?? "").Trim().ToLowerInvariant();
+            if (v == "obsidian" || v == "graphite") return v;
+            return v == "dark" ? "graphite" : "light";
         }
 
         private Settings WithDefaults()
@@ -229,8 +242,10 @@ namespace VoiceDictate
             sb.AppendLine("topmost = " + (TopMost ? "yes" : "no"));
             sb.AppendLine("; Интерфейс: web — новый (нужен WebView2, есть в Windows 10/11), classic — старое окно");
             sb.AppendLine("ui = " + (ClassicUi ? "classic" : "web"));
-            sb.AppendLine("; Тема окна: light — светлая, dark — тёмная (переключатель рядом с шестерёнкой)");
+            sb.AppendLine("; Тема окна: light — «Белый», obsidian — «Обсидиан», graphite — «Графит айс» (меняется в настройках, «Оформление»)");
             sb.AppendLine("theme = " + Theme);
+            sb.AppendLine("; Прозрачность стеклянных панелей, 0..100");
+            sb.AppendLine("glass = " + Glass);
             sb.AppendLine("; Подсказку про трей уже показывали (yes / no)");
             sb.AppendLine("tray_hint_shown = " + (TrayHintShown ? "yes" : "no"));
             sb.AppendLine("; Распознавание файлов: кроме .txt сохранять субтитры .srt с таймкодами (yes / no)");

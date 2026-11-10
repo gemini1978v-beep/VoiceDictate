@@ -52,7 +52,7 @@ namespace VoiceDictate
             Text = L.T("Распознать файл — Голосовой ввод ", "Transcribe file — Voice Input ") + L.Version;
             FormBorderStyle = FormBorderStyle.None;
             ClientSize = new Size(LogicalToDeviceUnits(WebWidth), LogicalToDeviceUnits(WebHeight));
-            BackColor = WebUi.BackColor(main.IsDarkTheme);
+            BackColor = WebUi.BackColor(main.ThemeName);
             Icon = main.Icon;
             TopMost = main.TopMost;
             StartPosition = FormStartPosition.Manual;
@@ -114,9 +114,15 @@ namespace VoiceDictate
             PushState();
         }
 
+        /// <summary>Сменилась прозрачность стекла — только перерисовать страницу.</summary>
+        public void PushTheme()
+        {
+            PushState();
+        }
+
         public void ApplyTheme()
         {
-            BackColor = WebUi.BackColor(main.IsDarkTheme);
+            BackColor = WebUi.BackColor(main.ThemeName);
             cover.BackColor = BackColor;
             try
             {
@@ -146,7 +152,7 @@ namespace VoiceDictate
                 core.Settings.AreBrowserAcceleratorKeysEnabled = false;
                 core.WebMessageReceived += OnWebMessage;
                 core.NewWindowRequested += (s, e) => e.Handled = true;
-                core.NavigateToString(WebUi.LoadHtml("files.html", main.IsDarkTheme));
+                core.NavigateToString(WebUi.LoadHtml("files.html", main.ThemeName));
             }
             catch (Exception ex)
             {
@@ -422,7 +428,8 @@ namespace VoiceDictate
 
             var j = new MainForm.Js()
                 .S("type", "state")
-                .S("theme", main.IsDarkTheme ? "dark" : "light")
+                .S("theme", main.ThemeName)
+                .N("glass", main.AppSettings.Glass)
                 .S("stage", stage)
                 .N("progress", progress)
                 .N("elapsed", Running || stage == "done" ? Math.Floor((DateTime.Now - started).TotalSeconds) : 0)

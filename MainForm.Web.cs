@@ -115,15 +115,15 @@ namespace VoiceDictate
             ApplyWindowTheme();
         }
 
+        /// <summary>Тёмные темы: «Обсидиан» и «Графит айс».</summary>
         private bool DarkTheme
         {
-            get { return settings.Theme == "dark"; }
+            get { return settings.Theme != "light"; }
         }
 
-        /// <summary>Цвет окна до загрузки страницы — чтобы не мигало белым в тёмной теме.</summary>
         private Color ThemeBackColor()
         {
-            return DarkTheme ? Color.FromArgb(36, 38, 44) : Color.White;   // = --bg тёмной темы в ui\index.html
+            return WebUi.BackColor(settings.Theme);
         }
 
         /// <summary>Окно под тему: фон и (Windows 11) тёмная рамка.</summary>
@@ -197,7 +197,7 @@ namespace VoiceDictate
                         e.Uri.StartsWith(WebUi.AppOrigin, StringComparison.OrdinalIgnoreCase))
                         e.State = CoreWebView2PermissionState.Allow;
                 };
-                WebUi.ServePage(core, env, "index.html", () => DarkTheme);
+                WebUi.ServePage(core, env, "index.html", () => settings.Theme);
                 core.Navigate(WebUi.AppOrigin + "index.html");
             }
             catch (Exception ex)
@@ -334,7 +334,8 @@ namespace VoiceDictate
                 .N("delay", (double)numDelay.Value)
                 .B("typeText", chkType.Checked)
                 .B("topmost", chkTopMost.Checked)
-                .S("theme", DarkTheme ? "dark" : "light")
+                .S("theme", settings.Theme)
+                .N("glass", settings.Glass)
                 .S("text", txtText.Text)
                 .B("canDictate", !busy)
                 .B("canSend", !busy && !recording)
@@ -548,10 +549,19 @@ namespace VoiceDictate
                     break;
 
                 case "theme":
-                    settings.Theme = arg == "dark" ? "dark" : "light";
+                    settings.Theme = Settings.ThemeId(arg);
                     SaveSettings();
                     ApplyWindowTheme();
                     if (fileForm != null && !fileForm.IsDisposed) fileForm.ApplyTheme();
+                    break;
+                case "glass":
+                    int gl;
+                    if (int.TryParse(arg, out gl))
+                    {
+                        settings.Glass = Math.Max(0, Math.Min(100, gl));
+                        SaveSettings();
+                        if (fileForm != null && !fileForm.IsDisposed) fileForm.PushTheme();
+                    }
                     break;
                 case "files":
                     OpenFileWindow(null);
@@ -630,6 +640,11 @@ namespace VoiceDictate
         internal bool IsDarkTheme
         {
             get { return DarkTheme; }
+        }
+
+        internal string ThemeName
+        {
+            get { return settings.Theme; }
         }
 
         internal void LogExternal(string msg)

@@ -29,9 +29,9 @@ namespace VoiceDictate
 
         /// <summary>
         /// Страница из ui\ рядом с exe (можно править без пересборки), иначе — встроенная копия.
-        /// В тёмной теме сразу ставим data-theme="dark", чтобы не мигало белым.
+        /// Тему ставим сразу (data-theme="obsidian" / "graphite"), чтобы при загрузке не мигало белым.
         /// </summary>
-        public static string LoadHtml(string file, bool dark)
+        public static string LoadHtml(string file, string theme)
         {
             string html;
             string ext = Path.Combine(WhisperEngine.BaseDir, "ui", file);
@@ -47,7 +47,8 @@ namespace VoiceDictate
                     using (var r = new StreamReader(st, Encoding.UTF8)) html = r.ReadToEnd();
                 }
             }
-            if (dark) html = html.Replace("<html lang=\"ru\">", "<html lang=\"ru\" data-theme=\"dark\">");
+            if (theme == "obsidian" || theme == "graphite")
+                html = html.Replace("<html lang=\"ru\">", "<html lang=\"ru\" data-theme=\"" + theme + "\">");
             // английский интерфейс — сразу, чтобы страница не мелькала русским текстом
             if (L.En) html = html.Replace("<html lang=\"ru\"", "<html lang=\"en\" data-lang=\"en\"");
             return html;
@@ -60,7 +61,7 @@ namespace VoiceDictate
         public const string AppOrigin = "https://voicedictate.local/";
 
         /// <summary>Отдавать страницу file из ui\ по адресу AppOrigin + file.</summary>
-        public static void ServePage(CoreWebView2 core, CoreWebView2Environment env, string file, Func<bool> dark)
+        public static void ServePage(CoreWebView2 core, CoreWebView2Environment env, string file, Func<string> theme)
         {
             core.AddWebResourceRequestedFilter(AppOrigin + "*", CoreWebView2WebResourceContext.All);
             core.WebResourceRequested += (s, e) =>
@@ -72,15 +73,18 @@ namespace VoiceDictate
                     e.Response = env.CreateWebResourceResponse(null, 404, "Not Found", "");
                     return;
                 }
-                byte[] bytes = Encoding.UTF8.GetBytes(LoadHtml(file, dark()));
+                byte[] bytes = Encoding.UTF8.GetBytes(LoadHtml(file, theme()));
                 e.Response = env.CreateWebResourceResponse(new MemoryStream(bytes), 200, "OK",
                     "Content-Type: text/html; charset=utf-8\r\nCache-Control: no-store");
             };
         }
 
-        public static Color BackColor(bool dark)
+        /// <summary>Цвет окна до загрузки страницы — как фон темы, чтобы не мигало.</summary>
+        public static Color BackColor(string theme)
         {
-            return dark ? Color.FromArgb(36, 38, 44) : Color.White;
+            if (theme == "obsidian") return Color.FromArgb(8, 13, 27);
+            if (theme == "graphite") return Color.FromArgb(43, 46, 52);
+            return Color.White;
         }
 
         [DllImport("dwmapi.dll")]

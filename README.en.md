@@ -129,7 +129,12 @@ The window is drawn with HTML/CSS (`ui\index.html`) and shown through
 - When minimized (yellow circle or taskbar button), the window hides in the tray next to the clock,
   F3 works as usual. Tray icon color: blue — idle, green — recording,
   orange — recognizing. Click the icon to open the window, right-click — “Exit”.
-- Moon/sun next to the gear — dark/light theme (remembered).
+- Settings are split into “General”, “Recognition” and “Advanced” tabs; the top of “General” shows
+  the selected model, microphone and hotkey. Long explanations are folded under “More”,
+  the log opens with the “Diagnostics” button.
+- **Appearance** (“Advanced”): three themes — “White”, “Obsidian”, “Graphite Ice” — and a transparency
+  slider for the glass panels. In `settings.ini`: `theme = light / obsidian / graphite`, `glass = 0…100`.
+- While recording, a live sound wave runs around the microphone.
 - **RU/EN** button — interface language (remembered; `ui_lang` in `settings.ini`).
 - Only one copy runs: starting the exe again just shows the open window
   (including from the tray).
