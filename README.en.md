@@ -132,8 +132,8 @@ The window is drawn with HTML/CSS (`ui\index.html`) and shown through
 - Settings are split into “General”, “Recognition” and “Advanced” tabs; the top of “General” shows
   the selected model, microphone and hotkey. Long explanations are folded under “More”,
   the log opens with the “Diagnostics” button.
-- **Appearance** (“Advanced”): three themes — “White”, “Obsidian”, “Graphite Ice” — and a transparency
-  slider for the glass panels. In `settings.ini`: `theme = light / obsidian / graphite`, `glass = 0…100`.
+- **Appearance** (“Advanced”): four themes — “White”, “Obsidian”, “Graphite Ice”, “Bordeaux” — and a transparency
+  slider for the glass panels. In `settings.ini`: `theme = light / obsidian / graphite / bordo`, `glass = 0…100`.
 - While recording, a live sound wave runs around the microphone.
 - **RU/EN** button — interface language (remembered; `ui_lang` in `settings.ini`).
 - Only one copy runs: starting the exe again just shows the open window

@@ -1,0 +1,203 @@
+/* =====================================================================
+   «Бордо · кристалл» — четвёртая тема для ui/index.html (и ui/files.html).
+   Ложится в существующий механизм тем: <html data-theme="bordo">.
+   Блок 1 — токены (те же имена, что у light / obsidian / graphite).
+   Блок 2 — «кристалл»: то, чего токенами не выразить (слои стекла, блики).
+   Блок 3 — запись: рубиновый вместо зелёного.
+   Блок 4 — миниатюра темы в «Оформлении».
+   Рецепт стекла взят с aisciencesmm.ru (класс .crystal):
+   градиентная заливка + блик-нить по верхней кромке + холодный отсвет слева
+   + второй внутренний слой + мягкая внутренняя тень + глубокая тень снизу.
+   ===================================================================== */
+
+/* ------------------------------------------------------------------ 1. токены */
+:root[data-theme="bordo"] {
+  /* акцент (в программе он называется --blue) */
+  --blue: #c96976;
+  --blue-hi: #e38c98;
+  --blue-lo: #9e4655;
+  --blue-soft: rgba(201,105,118,.16);
+  --blue-line: rgba(227,140,152,.42);
+  /* запись — рубин, распознавание — тёплый янтарь */
+  --green: #e0294f;
+  --green-hi: #ff5c7a;
+  --amber: #f0a35a;
+  --amber-hi: #ffc48a;
+  --red: #ff6b7a;
+  /* текст */
+  --text: #fae9dc;
+  --text-2: #ecd5ca;
+  --muted: #cca7ab;
+  --muted-2: #a8858a;
+  /* линии и поверхности */
+  --line: rgba(224,185,189,.16);
+  --line-2: rgba(224,185,189,.30);
+  --bg: #2a0d17;
+  --bg-2: #210c14;
+  --card: rgba(52,16,30,.55);
+  --btn: rgba(96,34,52,.55);
+  --btn-hover: rgba(118,44,64,.65);
+  --surface: rgba(40,12,24,.62);
+  --surface-off: rgba(33,10,20,.5);
+  --divider: rgba(224,185,189,.12);
+  --track: #5a2a38;
+  --bar-bg: rgba(90,36,52,.6);
+  --scroll-thumb: #6a2f40;
+  --scroll-thumb-hover: #82404f;
+  --log-bg: rgba(24,7,14,.6);
+  --log-line: rgba(224,185,189,.10);
+  --log-text: #e6cfc6;
+  --bar-glass: rgba(46,14,26,.78);
+  --icon: #cca7ab;
+  --dot-idle: #7d4b55;
+  --focus: #e38c98;
+  --notice-bg: rgba(201,105,118,.12);
+  --notice-line: rgba(227,140,152,.32);
+  --ok-bg: rgba(129,199,150,.12); --ok-line: rgba(129,199,150,.3); --ok-text: #9fe0b4;
+  --danger-bg: rgba(255,107,122,.12); --danger-line: rgba(255,107,122,.35);
+  /* фон окна: зерно (только здесь) + свет сверху слева + тень снизу справа + винный градиент */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 .92  0 0 0 0 .88  0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --app-bg:
+    var(--grain),
+    radial-gradient(85% 55% at 10% -5%, rgba(214,120,134,.30), rgba(214,120,134,0) 62%),
+    radial-gradient(60% 40% at 50% 46%, rgba(201,105,118,.10), rgba(201,105,118,0) 70%),
+    radial-gradient(70% 45% at 105% 105%, rgba(10,2,6,.55), rgba(10,2,6,0) 70%),
+    linear-gradient(135deg, #601f2b 0%, #3f1420 48%, #210c14 100%);
+  /* настройки — та же гамма, спокойнее, без зерна */
+  --set-bg:
+    radial-gradient(70% 40% at 0% 0%, rgba(214,120,134,.18), rgba(214,120,134,0) 65%),
+    radial-gradient(60% 40% at 100% 100%, rgba(10,2,6,.45), rgba(10,2,6,0) 70%),
+    linear-gradient(160deg, #4a1824 0%, #2e0f1a 55%, #210c14 100%);
+  /* кольца вокруг микрофона */
+  --halo: 201,105,118;
+  --halo-a1: .10; --halo-a2: .14;
+  --wave: 224,60,95;
+  --rec: 255,70,105;            /* цвет волны при записи (r,g,b) */
+  /* тени */
+  --shadow-card: 0 22px 35px -18px rgba(8,1,8,.67);
+  --shadow-text: 0 8px 22px rgba(10,0,6,.45);
+  --light-off: #6e3c47;
+  --demo-bg: #140509;
+  /* стекло (ползунок «Прозрачность» меняет --glass-a и --glass-blur) */
+  --glass-rgb: 52,16,30;
+  --glass-edge: rgba(224,185,189,.30);
+  --glass-hi: rgba(255,255,255,.40);
+  --glass-cold: rgba(182,222,246,.16);     /* холодный отсвет по левой кромке */
+  --glass-inner: rgba(20,0,8,.28);         /* мягкая внутренняя тень снизу */
+  --glint: linear-gradient(90deg, rgba(255,255,255,0) 3%, rgba(164,217,255,.45) 17%, rgba(255,244,236,.85) 31%, rgba(255,214,206,.5) 48%, rgba(255,255,255,0) 90%);
+  --win-border: rgba(232,190,192,.38);
+  /* микрофон: рубиновая линза с бликом и двумя полупрозрачными кольцами */
+  --mic-bg:
+    radial-gradient(60% 45% at 38% 22%, rgba(255,226,220,.55), rgba(255,226,220,0) 70%),
+    radial-gradient(circle at 50% 60%, #b44558 0%, #8a2a3e 45%, #5e1527 78%, #43101d 100%);
+  --mic-shadow:
+    inset 0 2px 1px rgba(255,236,228,.55),
+    inset 0 -14px 26px rgba(30,0,10,.55),
+    inset 0 0 0 1px rgba(255,214,210,.25),
+    0 0 0 1px rgba(250,215,210,.30),
+    0 0 0 16px rgba(201,105,118,.07),
+    0 0 0 34px rgba(201,105,118,.045),
+    0 20px 44px rgba(20,0,8,.6);
+  --radius: 16px;
+  --font-title: "Cormorant Garamond", "Playfair Display", Georgia, serif;
+  color-scheme: dark;
+}
+
+/* ------------------------------------------------------------------ 2. кристалл */
+/* карточки, плашки, вкладки, поле текста: два слоя стекла и блики */
+:root[data-theme="bordo"] .card,
+:root[data-theme="bordo"] .notice,
+:root[data-theme="bordo"] .textcard,
+:root[data-theme="bordo"] .glass {
+  position: relative; isolation: isolate;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.07), rgba(255,255,255,0) 40%),
+    linear-gradient(160deg, rgba(var(--glass-rgb), calc(var(--glass-a) * .75)), rgba(33,11,21, calc(var(--glass-a) + .08))) !important;
+  border: 1px solid var(--glass-edge) !important;
+  border-radius: var(--radius);
+  box-shadow:
+    inset 0 1px 1px var(--glass-hi),        /* светлая верхняя кромка */
+    inset 1px 0 2px var(--glass-cold),      /* холодный отсвет слева */
+    inset 0 -14px 28px var(--glass-inner),  /* мягкая внутренняя тень */
+    var(--shadow-card) !important;          /* глубина */
+}
+/* второй, внутренний слой стекла — едва заметное ледяное свечение */
+:root[data-theme="bordo"] .card::before,
+:root[data-theme="bordo"] .notice::before,
+:root[data-theme="bordo"] .textcard::before {
+  content: ""; position: absolute; inset: 5px; z-index: -1; pointer-events: none;
+  border-radius: calc(var(--radius) - 5px);
+  background: radial-gradient(90% 60% at 16% 0%, rgba(214,234,255,.05), rgba(214,234,255,0) 47%);
+  border: 1px solid rgba(255,230,225,.05);
+}
+/* блик-нить по верхней кромке */
+:root[data-theme="bordo"] .card::after,
+:root[data-theme="bordo"] .notice::after,
+:root[data-theme="bordo"] .textcard::after,
+:root[data-theme="bordo"] .startpill::after {
+  content: ""; position: absolute; top: 0; left: 8%; right: 22%; height: 1.5px;
+  background: var(--glint); opacity: .6; filter: blur(.2px); pointer-events: none;
+}
+
+/* заголовок — антиква, как на aisciencesmm.ru */
+:root[data-theme="bordo"] h1 {
+  font-family: var(--font-title);
+  font-weight: 600; font-size: 36px; letter-spacing: -.01em;
+  text-shadow: 0 2px 18px rgba(10,0,6,.45);
+}
+:root[data-theme="bordo"] .tb-title b { font-family: var(--font-title); font-size: 19px; font-weight: 600; }
+
+/* кнопка «Начать запись · F3» — кристальная пилюля */
+:root[data-theme="bordo"] .startpill {
+  position: relative;
+  background:
+    linear-gradient(125deg, rgba(97,48,65,.56), rgba(49,17,31,.74)) !important;
+  border: 1px solid rgba(224,185,189,.38);
+  box-shadow: inset 0 1px 0 rgba(255,228,210,.30), inset 1px 0 2px var(--glass-cold), 0 8px 22px rgba(25,3,11,.4);
+}
+:root[data-theme="bordo"] kbd {
+  background: linear-gradient(120deg, #76263d, #421525 65%, #6b2639);
+  color: #fae9dc; border: 1px solid rgba(229,184,175,.49);
+  box-shadow: inset 0 1px 0 rgba(255,228,210,.3);
+}
+/* главная кнопка «Сохранить», «Обновить» и т. п. — как .action на сайте */
+:root[data-theme="bordo"] .btn.primary {
+  background: linear-gradient(120deg, #9a3a52, #6b2136 60%, #8c3349);
+  border: 1px solid rgba(229,184,175,.5); color: #fff4ec;
+  box-shadow: inset 0 1px 0 rgba(255,228,210,.32), 0 8px 22px rgba(25,3,11,.35);
+}
+/* вкладки: выбранная — приподнятая стеклянная пластина */
+:root[data-theme="bordo"] .tab.on {
+  background: linear-gradient(160deg, rgba(118,44,64,.75), rgba(66,21,37,.75));
+  box-shadow: inset 0 1px 0 rgba(255,228,210,.30), 0 4px 12px rgba(10,0,6,.35);
+}
+/* переключатели и ползунок */
+:root[data-theme="bordo"] .switch input:checked + i { background: linear-gradient(90deg, #9e4655, #c96976); }
+:root[data-theme="bordo"] .glass-row input[type=range] { accent-color: #c96976; }
+
+/* ------------------------------------------------------------------ 3. запись — ярче, рубин */
+:root[data-theme="bordo"] .app.rec .mic {
+  background:
+    radial-gradient(60% 45% at 38% 22%, rgba(255,230,232,.6), rgba(255,230,232,0) 70%),
+    radial-gradient(circle at 50% 60%, #ff4d6d 0%, #d01d45 45%, #8e0f2e 80%, #650a20 100%);
+  box-shadow:
+    inset 0 2px 1px rgba(255,240,240,.6), inset 0 -14px 26px rgba(40,0,12,.5),
+    0 0 0 1px rgba(255,190,200,.55), 0 0 30px rgba(255,60,100,.55), 0 0 70px rgba(255,60,100,.25);
+}
+:root[data-theme="bordo"] .app.rec .halo.h1 { background: radial-gradient(circle, rgba(255,60,100,.10) 55%, rgba(255,60,100,.04) 70%, rgba(255,60,100,0) 72%); }
+:root[data-theme="bordo"] .app.rec .halo.h2 { background: rgba(255,60,100,.15); }
+:root[data-theme="bordo"] .app.rec .startpill { border-color: rgba(255,90,120,.6); box-shadow: inset 0 1px 0 rgba(255,228,210,.3), 0 4px 22px rgba(255,60,100,.3); }
+:root[data-theme="bordo"] .dot.rec { box-shadow: 0 0 0 3px rgba(255,60,100,.2); }
+:root[data-theme="bordo"] .ping { border-color: #ff4d6d; }
+
+/* ------------------------------------------------------------------ 4. миниатюра в «Оформлении» */
+.sw-bordo {
+  background:
+    radial-gradient(70% 60% at 10% 0%, rgba(214,120,134,.45), transparent 70%),
+    linear-gradient(135deg, #601f2b, #210c14);
+  border: 1px solid rgba(232,190,192,.45);
+}
+.sw-bordo::after {
+  background: radial-gradient(circle at 38% 28%, #f0b2b9, #a23a4d 45%, #5e1527);
+  box-shadow: 0 0 0 2px rgba(250,215,210,.35), 0 0 12px rgba(201,105,118,.6);
+}

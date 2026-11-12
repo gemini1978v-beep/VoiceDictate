@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Бордо кристалл</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;600&display=swap" rel="stylesheet">
+<!--
+  Макет темы «Бордо · кристалл». Открывать через локальный сервер из папки проекта:
+    python -m http.server 8770   →   http://localhost:8770/design/bordo-crystal/mockup.html
+  В рамках — настоящий интерфейс программы (ui/index.html в демо-режиме), к нему
+  подключается theme-bordo.css. Код программы не меняется.
+-->
+<style>
+  :root {
+    --bg: #12060a; --text: #fae9dc; --muted: #cca7ab; --line: rgba(224,185,189,.18);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; color: var(--text); font: 14px/1.5 Manrope, "Segoe UI", sans-serif;
+    background:
+      radial-gradient(60% 50% at 20% 0%, rgba(160,50,70,.35), transparent 70%),
+      radial-gradient(50% 40% at 90% 100%, rgba(90,20,40,.35), transparent 70%),
+      var(--bg);
+  }
+  header { padding: 28px 32px 8px; }
+  h1 { margin: 0; font: 600 34px "Cormorant Garamond", Georgia, serif; letter-spacing: -.01em; }
+  h1 i { font-weight: 500; color: #e3a3ad; }
+  header p { margin: 6px 0 0; color: var(--muted); max-width: 760px; }
+  .row { display: flex; flex-wrap: wrap; gap: 28px; padding: 18px 32px 8px; align-items: flex-start; }
+  figure { margin: 0; }
+  figcaption { margin-top: 10px; color: var(--muted); font-size: 12.5px; text-align: center; }
+  iframe {
+    width: 400px; height: 600px; border: 0; border-radius: 14px; display: block; background: #210c14;
+    box-shadow: 0 30px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(232,190,192,.18);
+  }
+  .tokens { padding: 16px 32px 40px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; max-width: 1100px; }
+  .tok { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: rgba(40,12,24,.5); }
+  .tok i { display: block; height: 46px; }
+  .tok span { display: block; padding: 6px 9px; font-size: 11.5px; color: var(--muted); }
+  .tok b { display: block; color: var(--text); font-weight: 600; font-size: 12px; }
+  @media (max-width: 520px) { iframe { width: 100%; } .row, header, .tokens { padding-left: 16px; padding-right: 16px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Бордо · <i>кристалл</i></h1>
+  <p>Четвёртая тема для «Голосового ввода». Многослойное стекло по рецепту aisciencesmm.ru: градиентная заливка,
+     блик-нить по верхней кромке, холодный отсвет слева, второй внутренний слой, мягкая внутренняя тень и глубокая тень снизу.
+     В рамках — настоящий интерфейс программы с подключённой темой.</p>
+</header>
+
+<div class="row">
+  <figure><iframe id="fMain" src="../../ui/index.html?v=1"></iframe><figcaption>Главное окно · ожидание</figcaption></figure>
+  <figure><iframe id="fRec" src="../../ui/index.html?v=2"></iframe><figcaption>Главное окно · запись (рубин)</figcaption></figure>
+  <figure><iframe id="fSet" src="../../ui/index.html?settings=1&v=3"></iframe><figcaption>Настройки · Дополнительно</figcaption></figure>
+  <figure><iframe id="fSet2" src="../../ui/index.html?settings=1&v=4"></iframe><figcaption>Настройки · Основное</figcaption></figure>
+</div>
+
+<div class="tokens">
+  <div class="tok"><i style="background:linear-gradient(135deg,#601f2b,#210c14)"></i><span><b>Фон окна</b>#601F2B → #210C14</span></div>
+  <div class="tok"><i style="background:#fae9dc"></i><span><b>Текст</b>#FAE9DC</span></div>
+  <div class="tok"><i style="background:#cca7ab"></i><span><b>Вторичный</b>#CCA7AB</span></div>
+  <div class="tok"><i style="background:#c96976"></i><span><b>Акцент</b>#C96976</span></div>
+  <div class="tok"><i style="background:#e0294f"></i><span><b>Запись</b>#E0294F / #FF4D6D</span></div>
+  <div class="tok"><i style="background:rgba(52,16,30,.55);box-shadow:inset 0 1px 1px rgba(255,255,255,.4),inset 1px 0 2px rgba(182,222,246,.16)"></i><span><b>Стекло</b>rgba(52,16,30,.55)</span></div>
+  <div class="tok"><i style="background:linear-gradient(90deg,transparent 3%,rgba(164,217,255,.45) 17%,rgba(255,244,236,.85) 31%,rgba(255,214,206,.5) 48%,transparent 90%) center/100% 3px no-repeat,#2a0d17"></i><span><b>Блик-нить</b>верхняя кромка</span></div>
+  <div class="tok"><i style="background:rgba(224,185,189,.30)"></i><span><b>Кромка</b>rgba(224,185,189,.30)</span></div>
+</div>
+
+<script>
+  // Подключаем тему к каждому окну и держим data-theme="bordo"
+  // (демо-режим программы знает только три темы и сам переключает обратно).
+  function dress(frame, opts) {
+    var w = frame.contentWindow, d = frame.contentDocument;
+    var link = d.createElement('link');
+    link.rel = 'stylesheet'; link.href = '../design/bordo-crystal/theme-bordo.css?v=' + Date.now();
+    d.head.appendChild(link);
+    var fonts = d.createElement('link');
+    fonts.rel = 'stylesheet';
+    fonts.href = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&display=swap';
+    d.head.appendChild(fonts);
+    var root = d.documentElement;
+    function keep() {
+      if (root.getAttribute('data-theme') !== 'bordo') root.setAttribute('data-theme', 'bordo');
+      var box = d.getElementById('themes');
+      if (box && !d.getElementById('tileBordo')) {
+        var b = d.createElement('button');
+        b.className = 'theme-tile'; b.id = 'tileBordo';
+        b.innerHTML = '<i class="sw sw-bordo"></i><span>Бордо</span>';
+        box.appendChild(b);
+        box.style.gridTemplateColumns = 'repeat(4, 1fr)';
+      }
+      d.querySelectorAll('.theme-tile').forEach(function (t) { t.classList.toggle('on', t.id === 'tileBordo'); });
+    }
+    keep();
+    new w.MutationObserver(keep).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+    setInterval(keep, 400);
+    var gr = d.getElementById('glassRange');
+    if (gr) { gr.value = 55; gr.dispatchEvent(new w.Event('input')); }
+    if (opts.tab) { var t = d.querySelector('.tab[data-tab="' + opts.tab + '"]'); if (t) t.click(); }
+    if (opts.rec) setTimeout(function () { var p = d.getElementById('startPill'); if (p) p.click(); }, 600);
+  }
+  [['fMain', {}], ['fRec', { rec: true }], ['fSet', { tab: 'more' }], ['fSet2', { tab: 'main' }]].forEach(function (x) {
+    var f = document.getElementById(x[0]), done = false;
+    function go() {
+      var d = f.contentDocument;
+      if (done || !d || d.readyState !== 'complete' || !d.getElementById('mainScreen')) return;
+      done = true;
+      dress(f, x[1]);
+    }
+    f.addEventListener('load', go);
+    var poll = setInterval(function () { go(); if (done) clearInterval(poll); }, 200);
+  });
+</script>
+</body>
+</html>

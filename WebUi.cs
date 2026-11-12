@@ -47,7 +47,7 @@ namespace VoiceDictate
                     using (var r = new StreamReader(st, Encoding.UTF8)) html = r.ReadToEnd();
                 }
             }
-            if (theme == "obsidian" || theme == "graphite")
+            if (theme == "obsidian" || theme == "graphite" || theme == "bordo")
                 html = html.Replace("<html lang=\"ru\">", "<html lang=\"ru\" data-theme=\"" + theme + "\">");
             // английский интерфейс — сразу, чтобы страница не мелькала русским текстом
             if (L.En) html = html.Replace("<html lang=\"ru\"", "<html lang=\"en\" data-lang=\"en\"");
@@ -84,6 +84,7 @@ namespace VoiceDictate
         {
             if (theme == "obsidian") return Color.FromArgb(8, 13, 27);
             if (theme == "graphite") return Color.FromArgb(43, 46, 52);
+            if (theme == "bordo") return Color.FromArgb(42, 13, 23);
             return Color.White;
         }
 

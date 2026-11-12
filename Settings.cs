@@ -50,7 +50,7 @@ namespace VoiceDictate
         public string LastUpdateCheck = "";   // когда последний раз удалось проверить: дд-мм-гг чч:мм       // GigaAM: вставлять каждую фразу после паузы, не дожидаясь конца записи
         public bool TopMost = false;
         public bool ClassicUi = false;        // ui = classic — старое окно вместо HTML-интерфейса
-        public string Theme = "light";       // тема окна: light — «Белый», obsidian — «Обсидиан», graphite — «Графит айс»
+        public string Theme = "light";       // тема окна: light — «Белый», obsidian — «Обсидиан», graphite — «Графит айс», bordo — «Бордо»
         public int Glass = 50;                // прозрачность стеклянных панелей, 0..100
         public bool TrayHintShown = false;    // подсказку «работаю в трее» уже показывали
         public bool FileSrt = false;          // распознавание файлов: ещё и субтитры .srt
@@ -179,7 +179,7 @@ namespace VoiceDictate
         public static string ThemeId(string v)
         {
             v = (v ?? "").Trim().ToLowerInvariant();
-            if (v == "obsidian" || v == "graphite") return v;
+            if (v == "obsidian" || v == "graphite" || v == "bordo") return v;
             return v == "dark" ? "graphite" : "light";
         }
 
@@ -242,7 +242,7 @@ namespace VoiceDictate
             sb.AppendLine("topmost = " + (TopMost ? "yes" : "no"));
             sb.AppendLine("; Интерфейс: web — новый (нужен WebView2, есть в Windows 10/11), classic — старое окно");
             sb.AppendLine("ui = " + (ClassicUi ? "classic" : "web"));
-            sb.AppendLine("; Тема окна: light — «Белый», obsidian — «Обсидиан», graphite — «Графит айс» (меняется в настройках, «Оформление»)");
+            sb.AppendLine("; Тема окна: light — «Белый», obsidian — «Обсидиан», graphite — «Графит айс», bordo — «Бордо» (меняется в настройках, «Оформление»)");
             sb.AppendLine("theme = " + Theme);
             sb.AppendLine("; Прозрачность стеклянных панелей, 0..100");
             sb.AppendLine("glass = " + Glass);
